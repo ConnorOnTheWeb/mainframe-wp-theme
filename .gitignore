@@ -1,0 +1,18 @@
+# WordPress-generated files
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/cache/
+*.log
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artefacts (none currently, but precautionary)
+node_modules/
+vendor/
+dist/
