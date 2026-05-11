@@ -1,6 +1,6 @@
-# Mainframe
+# Mainframe - Headless WordPress Theme
 
-Headless WordPress theme — full dashboard, full REST API, minimal public face.
+Headless WordPress theme - full dashboard, full REST API, minimal public face.
 
 **No plugins required. No build tools. No external dependencies.**
 
