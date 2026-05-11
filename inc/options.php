@@ -96,6 +96,16 @@ function mainframe_register_settings(): void {
 		]
 	);
 
+	register_setting(
+		'mainframe_settings_group',
+		'mainframe_default_featured_image_url',
+		[
+			'type'              => 'string',
+			'default'           => '',
+			'sanitize_callback' => 'mainframe_sanitize_default_featured_image_url',
+		]
+	);
+
 	// ------------------------------------------------------------------
 	// Section: Public Frontend
 	// ------------------------------------------------------------------
@@ -165,6 +175,14 @@ function mainframe_register_settings(): void {
 		'mainframe_cors_origin',
 		__( 'CORS Origin', 'mainframe' ),
 		'mainframe_render_cors_origin_field',
+		'mainframe-settings',
+		'mainframe_section_rest'
+	);
+
+	add_settings_field(
+		'mainframe_default_featured_image_url',
+		__( 'Default Featured Image', 'mainframe' ),
+		'mainframe_render_default_featured_image_field',
 		'mainframe-settings',
 		'mainframe_section_rest'
 	);
@@ -289,6 +307,41 @@ function mainframe_render_cors_origin_field(): void {
 	<?php
 }
 
+/**
+ * Render the Default Featured Image URL field with a media library picker button.
+ */
+function mainframe_render_default_featured_image_field(): void {
+	$value = get_option( 'mainframe_default_featured_image_url', '' );
+	?>
+	<div id="mainframe-default-featured-image-wrap">
+		<input
+			type="url"
+			id="mainframe_default_featured_image_url"
+			name="mainframe_default_featured_image_url"
+			value="<?php echo esc_attr( $value ); ?>"
+			class="regular-text"
+			placeholder="https://example.com/image.jpg"
+		>
+		<button type="button" class="button" id="mainframe-default-featured-image-pick">
+			<?php esc_html_e( 'Choose from Media Library', 'mainframe' ); ?>
+		</button>
+		<div
+			id="mainframe-default-featured-image-preview"
+			style="margin-top:8px;<?php echo $value ? '' : 'display:none;'; ?>"
+		>
+			<img
+				src="<?php echo esc_url( $value ); ?>"
+				alt=""
+				style="max-width:200px;max-height:150px;display:block;"
+			>
+		</div>
+		<p class="description">
+			<?php esc_html_e( 'Fallback image URL used in REST API responses when a post has no featured image set. Paste a URL or choose from the media library.', 'mainframe' ); ?>
+		</p>
+	</div>
+	<?php
+}
+
 // ---------------------------------------------------------------------------
 // Sanitization callbacks
 // ---------------------------------------------------------------------------
@@ -381,6 +434,31 @@ function mainframe_sanitize_cors_origin( $value ): string {
 			__( 'CORS origin must be a valid http or https URL. The value was not saved.', 'mainframe' )
 		);
 		return get_option( 'mainframe_cors_origin', '' );
+	}
+	return $url;
+}
+
+/**
+ * Sanitize the default featured image URL.
+ *
+ * Accepts an empty string (no default) or a valid absolute URL.
+ *
+ * @param mixed $value Raw input value.
+ * @return string Sanitized URL, or empty string.
+ */
+function mainframe_sanitize_default_featured_image_url( $value ): string {
+	$value = trim( (string) $value );
+	if ( empty( $value ) ) {
+		return '';
+	}
+	$url = esc_url_raw( $value, [ 'http', 'https' ] );
+	if ( empty( $url ) ) {
+		add_settings_error(
+			'mainframe_default_featured_image_url',
+			'mainframe_default_featured_image_url_invalid',
+			__( 'Default featured image must be a valid http or https URL. The value was not saved.', 'mainframe' )
+		);
+		return get_option( 'mainframe_default_featured_image_url', '' );
 	}
 	return $url;
 }
@@ -612,6 +690,84 @@ function mainframe_render_settings_page(): void {
 			?>
 		</form>
 	</div>
+	<?php
+}
+
+// ---------------------------------------------------------------------------
+// Default Featured Image — media library picker (settings page only)
+// ---------------------------------------------------------------------------
+
+add_action( 'admin_enqueue_scripts', 'mainframe_enqueue_default_featured_image_scripts' );
+/**
+ * Enqueue the WordPress media library on the Mainframe Settings page so the
+ * "Choose from Media Library" button can open the media picker frame.
+ *
+ * @param string $hook_suffix The current admin page hook suffix.
+ */
+function mainframe_enqueue_default_featured_image_scripts( string $hook_suffix ): void {
+	if ( 'appearance_page_mainframe-settings' !== $hook_suffix ) {
+		return;
+	}
+	wp_enqueue_media();
+}
+
+add_action( 'admin_footer', 'mainframe_print_default_featured_image_picker_script' );
+/**
+ * Print the inline JS that wires up the media library picker on the
+ * Mainframe Settings page.
+ */
+function mainframe_print_default_featured_image_picker_script(): void {
+	$screen = get_current_screen();
+	if ( ! $screen || 'appearance_page_mainframe-settings' !== $screen->id ) {
+		return;
+	}
+	?>
+	<script>
+	(function () {
+		var btn     = document.getElementById( 'mainframe-default-featured-image-pick' );
+		var input   = document.getElementById( 'mainframe_default_featured_image_url' );
+		var preview = document.getElementById( 'mainframe-default-featured-image-preview' );
+
+		if ( ! btn || ! input || ! preview ) {
+			return;
+		}
+
+		// Live-preview when the URL is typed/pasted directly.
+		input.addEventListener( 'input', function () {
+			var url = input.value.trim();
+			var img = preview.querySelector( 'img' );
+			if ( url && img ) {
+				img.src = url;
+				preview.style.display = 'block';
+			} else {
+				preview.style.display = 'none';
+			}
+		} );
+
+		btn.addEventListener( 'click', function ( e ) {
+			e.preventDefault();
+			var frame = wp.media( {
+				title:    <?php echo wp_json_encode( __( 'Select Default Featured Image', 'mainframe' ) ); ?>,
+				multiple: false,
+				library:  { type: 'image' },
+				button:   { text: <?php echo wp_json_encode( __( 'Use this image', 'mainframe' ) ); ?> }
+			} );
+			frame.on( 'select', function () {
+				var attachment = frame.state().get( 'selection' ).first().toJSON();
+				var url = ( attachment.sizes && attachment.sizes.full )
+					? attachment.sizes.full.url
+					: attachment.url;
+				input.value = url;
+				var img = preview.querySelector( 'img' );
+				if ( img ) {
+					img.src = url;
+				}
+				preview.style.display = 'block';
+			} );
+			frame.open();
+		} );
+	}());
+	</script>
 	<?php
 }
 

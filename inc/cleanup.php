@@ -19,7 +19,7 @@ add_action( 'after_setup_theme', 'mainframe_cleanup_head' );
  * the Windows Live Writer manifest link, and the RSD link. None of these
  * serve a purpose on a headless/API-only WordPress install.
  */
-function mainframe_cleanup_head() {
+function mainframe_cleanup_head(): void {
 	// Emoji — frontend detection script and inline styles.
 	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
 	remove_action( 'wp_print_styles', 'print_emoji_styles' );

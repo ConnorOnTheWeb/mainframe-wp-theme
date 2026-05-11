@@ -22,12 +22,14 @@ Headless WordPress theme - full dashboard, full REST API, minimal public face.
 
 ### Public frontend
 - Front page is a blank white canvas — optionally displays logo, headline, short message, and linktree-style link cards populated from nav menus
-- All archive, search, author, date, and singular routes redirect to home by default
-- Per-post route behavior overridable via a meta box ("show content" / "redirect" / site default)
+- Archive, search, author, and date routes always redirect to home
+- Singular posts/pages redirect by default; overridable per-post via a meta box ("show content" / "redirect" / site default)
+- Plugin-generated routes and custom rewrite rules are left untouched — only standard WordPress route types are redirected
 
 ### Custom login URL
-- `/wp-login.php` is blocked; login is served at a configurable slug (default: `/login`)
+- When a slug is configured, `/wp-login.php` is blocked and login is served at the custom slug (e.g. `/login`)
 - All WordPress login/logout/lost-password URLs rewritten automatically
+- No custom slug by default — `/wp-login.php` remains active until a slug is saved
 
 ### Admin cleanup
 - Irrelevant Customizer sections hidden (Static Front Page, Menu Locations, Patterns)
@@ -40,6 +42,12 @@ Headless WordPress theme - full dashboard, full REST API, minimal public face.
 - Per-post "Featured Image URL" field in the block editor sidebar and classic editor
 - Stores an external image URL that overrides the attached featured image in REST responses
 - Preview shown in the native Featured Image panel; Remove button to clear
+- **FIFU compatibility**: posts previously using the [Featured Image from URL](https://wordpress.org/plugins/featured-image-from-url/) plugin will automatically display their existing images — no re-entry needed after removing FIFU
+
+### Default featured image
+- Site-wide fallback URL used in `featured_media_url` REST responses when a post has no featured image of any kind
+- Configured in Appearance > Mainframe Settings — paste a URL or pick from the media library
+- Never written to post meta; the post editor is unaffected
 
 ### Defaults set on theme activation
 These are applied once when the theme is activated and do not affect existing content:
@@ -74,10 +82,11 @@ These are applied once when the theme is activated and do not affect existing co
 | Option | Description | Default |
 |---|---|---|
 | Redirect type | HTTP 301 or 302 for frontend redirects | 301 |
-| 404 behavior | Return a real 404 page or redirect home | 404 |
-| Login slug | URL slug for the login page | `login` |
+| 404 behavior | Return a real 404 page or redirect home | redirect |
+| Login slug | URL slug for the login page | *(empty — wp-login.php active)* |
 | CORS origin | Allowed origin for REST API requests (empty = `*`) | *(empty)* |
 | Default route behavior | What singular posts do by default | redirect |
+| Default featured image | Fallback image URL for posts with no featured image | *(empty)* |
 
 ---
 

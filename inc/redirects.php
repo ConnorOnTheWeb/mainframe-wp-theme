@@ -85,9 +85,10 @@ function mainframe_handle_redirects(): void {
 		return;
 	}
 
-	// Anything else that slipped through (e.g. a custom query type not
-	// covered above) redirects home as a safe default.
-	mainframe_redirect_home( $redirect_code );
+	// Anything not matched above (custom plugin rewrite rules, query vars,
+	// or other non-standard routes) is intentionally left alone. WordPress
+	// will render a 404 or the plugin will handle it — we do not redirect
+	// blindly so plugin-managed pages remain accessible.
 }
 
 // ---------------------------------------------------------------------------

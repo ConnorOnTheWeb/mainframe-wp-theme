@@ -51,7 +51,9 @@
 
 				var customUrl = ( meta && meta._mainframe_featured_image_url )
 					? meta._mainframe_featured_image_url
-					: '';
+					: ( meta && meta.fifu_image_url )
+						? meta.fifu_image_url
+						: '';
 
 				// No custom URL — render the native featured image UI unchanged.
 				if ( ! customUrl ) {
@@ -105,9 +107,13 @@
 
 		var editPost = useDispatch( 'core/editor' ).editPost;
 
+		// Only the theme's own field is editable via this input.
 		var url = ( meta && meta._mainframe_featured_image_url )
 			? meta._mainframe_featured_image_url
 			: '';
+
+		// FIFU migration: inform the user when their image is coming from the old plugin's meta.
+		var fifuUrl = ( ! url && meta && meta.fifu_image_url ) ? meta.fifu_image_url : '';
 
 		return el(
 			PluginDocumentSettingPanel,
@@ -123,9 +129,14 @@
 				onChange:    function ( value ) {
 					editPost( { meta: { _mainframe_featured_image_url: value } } );
 				},
-				placeholder: 'https://',
+				placeholder: fifuUrl || 'https://',
 				type:        'url',
-			} )
+			} ),
+			fifuUrl
+				? el( 'p', { style: { fontSize: '12px', color: '#757575', marginTop: '4px' } },
+					__( 'Image inherited from FIFU. Enter a URL above to override it.', 'mainframe' )
+				)
+				: null
 		);
 	}
 

@@ -135,18 +135,33 @@ function mainframe_register_featured_media_url_field(): void {
 					return '';
 				}
 
-				// Custom URL takes priority over the attached featured image.
+				// 1. Theme's own external URL field — highest priority.
 				$custom = (string) get_post_meta( $post_id, '_mainframe_featured_image_url', true );
 				if ( '' !== $custom ) {
 					return $custom;
 				}
 
-				$thumbnail_id = (int) get_post_thumbnail_id( $post_id );
-				if ( ! $thumbnail_id ) {
-					return '';
+				// 2. FIFU (Featured Image from URL plugin) migration support.
+				// FIFU stores its URL in fifu_image_url. When the plugin is
+				// removed its meta remains in the DB; we read it here so
+				// existing posts continue to return the correct URL without
+				// any manual re-entry.
+				$fifu = (string) get_post_meta( $post_id, 'fifu_image_url', true );
+				if ( '' !== $fifu ) {
+					return $fifu;
 				}
-				$src = wp_get_attachment_image_url( $thumbnail_id, 'full' );
-				return $src ?: '';
+
+				// 3. Standard WordPress attached featured image.
+				$thumbnail_id = (int) get_post_thumbnail_id( $post_id );
+				if ( $thumbnail_id ) {
+					$src = wp_get_attachment_image_url( $thumbnail_id, 'full' );
+					if ( $src ) {
+						return $src;
+					}
+				}
+
+				// 4. Site-wide default featured image (Mainframe Settings).
+				return (string) get_option( 'mainframe_default_featured_image_url', '' );
 			},
 			'schema' => [
 				'description' => __( 'Full URL of the featured image, or empty string if none.', 'mainframe' ),
