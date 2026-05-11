@@ -1,0 +1,230 @@
+# Copyright (C) 2026 connorontheweb
+# This file is distributed under the same license as the Mainframe package.
+# connorontheweb <>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Mainframe 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/connorontheweb/mainframe-wp-theme/issues\n"
+"POT-Creation-Date: 2026-05-11T00:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2024-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Domain: mainframe\n"
+
+#. Theme Name of the theme
+msgid "Mainframe - Headless WordPress Theme"
+msgstr ""
+
+#. Theme URI of the theme
+msgid "https://github.com/connorontheweb/mainframe-wp-theme"
+msgstr ""
+
+#. Description of the theme
+msgid "Headless WordPress theme - full dashboard, full REST API, minimal public face."
+msgstr ""
+
+#. Author of the theme
+msgid "connorontheweb"
+msgstr ""
+
+#. Author URI of the theme
+msgid "https://github.com/connorontheweb"
+msgstr ""
+
+#: inc/options.php
+msgid "Mainframe Settings"
+msgstr ""
+
+#: inc/options.php
+msgid "Public Frontend"
+msgstr ""
+
+#: inc/options.php
+msgid "Redirect Type"
+msgstr ""
+
+#: inc/options.php
+msgid "404 Behavior"
+msgstr ""
+
+#: inc/options.php
+msgid "Default Route Behavior"
+msgstr ""
+
+#: inc/options.php
+msgid "Security"
+msgstr ""
+
+#: inc/options.php
+msgid "Custom Login URL"
+msgstr ""
+
+#: inc/options.php
+msgid "REST API"
+msgstr ""
+
+#: inc/options.php
+msgid "CORS Origin"
+msgstr ""
+
+#: inc/options.php
+msgid "Default Featured Image"
+msgstr ""
+
+#: inc/options.php
+msgid "301 &#8212; Permanent"
+msgstr ""
+
+#: inc/options.php
+msgid "302 &#8212; Temporary"
+msgstr ""
+
+#: inc/options.php
+msgid "Redirect to home page"
+msgstr ""
+
+#: inc/options.php
+msgid "Show real 404 page"
+msgstr ""
+
+#: inc/options.php
+msgid "Show content"
+msgstr ""
+
+#: inc/options.php
+msgid "Applied to posts and pages that have no explicit per-page setting."
+msgstr ""
+
+#: inc/options.php
+#. translators: %s: full custom login URL
+msgid "Login URL: %s"
+msgstr ""
+
+#: inc/options.php
+#. translators: %s: default wp-login.php URL
+msgid "No custom slug set — login is at the default %s"
+msgstr ""
+
+#: inc/options.php
+msgid "Allowed origin for REST API CORS requests. Leave empty to use the WordPress default (allow all origins)."
+msgstr ""
+
+#: inc/options.php
+msgid "Choose from Media Library"
+msgstr ""
+
+#: inc/options.php
+msgid "Fallback image URL used in REST API responses when a post has no featured image set. Paste a URL or choose from the media library."
+msgstr ""
+
+#: inc/options.php
+msgid "Default featured image must be a valid http or https URL. The value was not saved."
+msgstr ""
+
+#: inc/options.php
+msgid "That login slug is reserved by WordPress. Please choose a different slug."
+msgstr ""
+
+#: inc/options.php
+msgid "CORS origin must be a valid http or https URL. The value was not saved."
+msgstr ""
+
+#: inc/options.php
+msgid "Save Settings"
+msgstr ""
+
+#: inc/options.php
+msgid "Select Default Featured Image"
+msgstr ""
+
+#: inc/options.php
+msgid "Use this image"
+msgstr ""
+
+#: inc/options.php
+msgid "Front Page"
+msgstr ""
+
+#: inc/options.php
+msgid "Headline"
+msgstr ""
+
+#: inc/options.php
+msgid "Short Message"
+msgstr ""
+
+#: inc/options.php
+msgid "Enter a headline for the front page. Leave empty to hide."
+msgstr ""
+
+#: inc/options.php
+msgid "Supports basic HTML: links, bold, italic, line breaks."
+msgstr ""
+
+#: inc/meta.php
+msgid "Public Route Behavior"
+msgstr ""
+
+#: inc/meta.php
+msgid "Redirect to home (site default)"
+msgstr ""
+
+#: inc/meta.php
+msgid "Show content (site default)"
+msgstr ""
+
+#: inc/meta.php
+msgid "Redirect to home"
+msgstr ""
+
+#: inc/meta.php
+msgid "Featured Image URL"
+msgstr ""
+
+#: inc/meta.php
+msgid "External image URL"
+msgstr ""
+
+#: inc/meta.php
+msgid "Overrides the attached featured image in the REST API response."
+msgstr ""
+
+#: inc/rest.php
+msgid "Full URL of the featured image, or empty string if none."
+msgstr ""
+
+#: functions.php
+msgid "Front Page Links"
+msgstr ""
+
+#: assets/js/featured-image-url.js
+msgid "Featured image (external URL)"
+msgstr ""
+
+#: assets/js/featured-image-url.js
+msgid "Featured Image URL is set"
+msgstr ""
+
+#: assets/js/featured-image-url.js
+msgid "Remove"
+msgstr ""
+
+#: assets/js/featured-image-url.js
+msgid "Featured Image URL"
+msgstr ""
+
+#: assets/js/featured-image-url.js
+msgid "External image URL"
+msgstr ""
+
+#: assets/js/featured-image-url.js
+msgid "Overrides the attached featured image in the REST API response. Preview shown in the Featured Image panel above."
+msgstr ""
+
+#: assets/js/featured-image-url.js
+msgid "Image inherited from FIFU. Enter a URL above to override it."
+msgstr ""
