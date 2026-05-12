@@ -4,6 +4,8 @@ Headless WordPress theme - full dashboard, full REST API, minimal public face.
 
 **No plugins required. No build tools. No external dependencies.**
 
+[Download latest release](https://github.com/ConnorOnTheWeb/mainframe-wp-theme/releases/latest/download/mainframe.zip)
+
 ---
 
 ## Requirements

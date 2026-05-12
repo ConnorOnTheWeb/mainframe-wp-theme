@@ -12,7 +12,8 @@ Thumbs.db
 *.swp
 *.swo
 
-# Build artefacts (none currently, but precautionary)
+# Build artefacts
 node_modules/
 vendor/
 dist/
+*.zip
