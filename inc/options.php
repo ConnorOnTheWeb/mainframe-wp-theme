@@ -91,7 +91,7 @@ function mainframe_register_settings(): void {
 		'mainframe_default_route_behavior',
 		[
 			'type'              => 'string',
-			'default'           => 'redirect',
+			'default'           => 'show',
 			'sanitize_callback' => 'mainframe_sanitize_default_route_behavior',
 		]
 	);
@@ -103,6 +103,26 @@ function mainframe_register_settings(): void {
 			'type'              => 'string',
 			'default'           => '',
 			'sanitize_callback' => 'mainframe_sanitize_default_featured_image_url',
+		]
+	);
+
+	register_setting(
+		'mainframe_settings_group',
+		'mainframe_deploy_hook_url',
+		[
+			'type'              => 'string',
+			'default'           => '',
+			'sanitize_callback' => 'mainframe_sanitize_deploy_hook_url',
+		]
+	);
+
+	register_setting(
+		'mainframe_settings_group',
+		'mainframe_deploy_hook_secret',
+		[
+			'type'              => 'string',
+			'default'           => '',
+			'sanitize_callback' => 'sanitize_text_field',
 		]
 	);
 
@@ -186,6 +206,22 @@ function mainframe_register_settings(): void {
 		'mainframe-settings',
 		'mainframe_section_rest'
 	);
+
+	add_settings_field(
+		'mainframe_deploy_hook_url',
+		__( 'Deploy Hook URL', 'mainframe' ),
+		'mainframe_render_deploy_hook_url_field',
+		'mainframe-settings',
+		'mainframe_section_rest'
+	);
+
+	add_settings_field(
+		'mainframe_deploy_hook_secret',
+		__( 'Deploy Hook Secret', 'mainframe' ),
+		'mainframe_render_deploy_hook_secret_field',
+		'mainframe-settings',
+		'mainframe_section_rest'
+	);
 }
 
 // ---------------------------------------------------------------------------
@@ -234,7 +270,7 @@ function mainframe_render_404_behavior_field(): void {
  * Render the Default Route Behavior radio field.
  */
 function mainframe_render_default_route_behavior_field(): void {
-	$value = get_option( 'mainframe_default_route_behavior', 'redirect' );
+	$value = get_option( 'mainframe_default_route_behavior', 'show' );
 	?>
 	<fieldset>
 		<label>
@@ -342,6 +378,46 @@ function mainframe_render_default_featured_image_field(): void {
 	<?php
 }
 
+/**
+ * Render the Deploy Hook URL field.
+ */
+function mainframe_render_deploy_hook_url_field(): void {
+	$value = get_option( 'mainframe_deploy_hook_url', '' );
+	?>
+	<input
+		type="url"
+		id="mainframe_deploy_hook_url"
+		name="mainframe_deploy_hook_url"
+		value="<?php echo esc_attr( $value ); ?>"
+		class="regular-text"
+		placeholder="https://api.vercel.com/v1/integrations/deploy/..."
+	>
+	<p class="description">
+		<?php esc_html_e( 'URL to POST to when a post is published or un-published. Leave empty to disable.', 'mainframe' ); ?>
+	</p>
+	<?php
+}
+
+/**
+ * Render the Deploy Hook Secret field.
+ */
+function mainframe_render_deploy_hook_secret_field(): void {
+	$value = get_option( 'mainframe_deploy_hook_secret', '' );
+	?>
+	<input
+		type="password"
+		id="mainframe_deploy_hook_secret"
+		name="mainframe_deploy_hook_secret"
+		value="<?php echo esc_attr( $value ); ?>"
+		class="regular-text"
+		autocomplete="new-password"
+	>
+	<p class="description">
+		<?php esc_html_e( 'Optional secret for HMAC-SHA256 signing. Sent as X-Mainframe-Signature so your deploy service can verify the request is genuine.', 'mainframe' ); ?>
+	</p>
+	<?php
+}
+
 // ---------------------------------------------------------------------------
 // Sanitization callbacks
 // ---------------------------------------------------------------------------
@@ -373,7 +449,7 @@ function mainframe_sanitize_404_behavior( $value ): string {
  * @return string 'redirect' or 'show'.
  */
 function mainframe_sanitize_default_route_behavior( $value ): string {
-	return in_array( (string) $value, [ 'redirect', 'show' ], true ) ? (string) $value : 'redirect';
+	return in_array( (string) $value, [ 'redirect', 'show' ], true ) ? (string) $value : 'show';
 }
 
 /**
@@ -459,6 +535,32 @@ function mainframe_sanitize_default_featured_image_url( $value ): string {
 			__( 'Default featured image must be a valid http or https URL. The value was not saved.', 'mainframe' )
 		);
 		return get_option( 'mainframe_default_featured_image_url', '' );
+	}
+	return $url;
+}
+
+/**
+ * Sanitize the deploy hook URL.
+ *
+ * Accepts an empty string (disabled) or a valid absolute https URL.
+ * http is also permitted for local development.
+ *
+ * @param mixed $value Raw input value.
+ * @return string Sanitized URL, or empty string.
+ */
+function mainframe_sanitize_deploy_hook_url( $value ): string {
+	$value = trim( (string) $value );
+	if ( empty( $value ) ) {
+		return '';
+	}
+	$url = esc_url_raw( $value, [ 'http', 'https' ] );
+	if ( empty( $url ) ) {
+		add_settings_error(
+			'mainframe_deploy_hook_url',
+			'mainframe_deploy_hook_url_invalid',
+			__( 'Deploy hook URL must be a valid http or https URL. The value was not saved.', 'mainframe' )
+		);
+		return get_option( 'mainframe_deploy_hook_url', '' );
 	}
 	return $url;
 }
@@ -680,8 +782,11 @@ function mainframe_render_settings_page(): void {
 	}
 	?>
 	<div class="wrap">
-		<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		<h1 class="wp-heading-inline"><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		<a href="<?php echo esc_url( admin_url( 'themes.php?page=mainframe-rest-reference' ) ); ?>" class="page-title-action"><?php esc_html_e( 'REST API Reference', 'mainframe' ); ?></a>
+		<hr class="wp-header-end">
 		<?php settings_errors(); ?>
+		<?php do_action( 'mainframe_settings_page_top' ); ?>
 		<form method="post" action="options.php">
 			<?php
 			settings_fields( 'mainframe_settings_group' );
@@ -711,16 +816,12 @@ function mainframe_enqueue_default_featured_image_scripts( string $hook_suffix )
 	wp_enqueue_media();
 }
 
-add_action( 'admin_footer', 'mainframe_print_default_featured_image_picker_script' );
+add_action( 'admin_print_footer_scripts-appearance_page_mainframe-settings', 'mainframe_print_default_featured_image_picker_script' );
 /**
  * Print the inline JS that wires up the media library picker on the
  * Mainframe Settings page.
  */
 function mainframe_print_default_featured_image_picker_script(): void {
-	$screen = get_current_screen();
-	if ( ! $screen || 'appearance_page_mainframe-settings' !== $screen->id ) {
-		return;
-	}
 	?>
 	<script>
 	(function () {

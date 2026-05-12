@@ -140,6 +140,17 @@
 		);
 	}
 
+	// Remove the Preview button — the WordPress frontend is not the consuming
+	// app on a headless install. Returning null suppresses the button entirely.
+	addFilter(
+		'editor.PostPreview',
+		'mainframe/disable-preview',
+		createHigherOrderComponent(
+			function () { return function () { return null; }; },
+			'MainframeDisablePreview'
+		)
+	);
+
 	registerPlugin( 'mainframe-featured-image-url', {
 		render: FeaturedImageUrlPanel,
 	} );

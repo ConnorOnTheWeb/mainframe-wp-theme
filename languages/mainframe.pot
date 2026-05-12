@@ -228,3 +228,123 @@ msgstr ""
 #: assets/js/featured-image-url.js
 msgid "Image inherited from FIFU. Enter a URL above to override it."
 msgstr ""
+
+#: inc/onboarding.php
+msgid "Mainframe is active."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Your site works normally right now. To configure headless mode, run the quick setup."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Mainframe Settings &rarr;"
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Headless Quick Setup"
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Mainframe is currently in safe mode — all your WordPress content is publicly accessible at its standard URLs. This is intentional: it lets you verify your content before switching."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "When your consuming app (Next.js, Nuxt, SvelteKit, etc.) is ready to be the only public face of your site, apply the headless defaults below. Each setting is reversible from this page at any time."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Redirect all public content routes to home"
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Posts, pages, and archives redirect visitors to the home page by default. Individual posts can still be set to \"Show content\" via the per-post meta box."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Discourage search engine indexing"
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Tells search engines not to index this WordPress backend. Your consuming frontend should handle SEO instead."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Disable comments and pingbacks on new posts"
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Comments can still be enabled per-post and are fully accessible via the REST API when a post has comment_status = open."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Use flat upload folder structure"
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Disables year/month subfolders in wp-content/uploads/. Automatically skipped if year-based folders already exist."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Set a custom login URL slug"
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Blocks /wp-login.php and serves login at your chosen slug. Leave blank to keep /wp-login.php active."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Apply Headless Defaults"
+msgstr ""
+
+#: inc/onboarding.php
+msgid "All settings are reversible from this page."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Headless defaults applied."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "Your site is now configured for headless operation. All selected settings are reversible from this page at any time."
+msgstr ""
+
+#: inc/onboarding.php
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+#: inc/options.php
+msgid "Deploy Hook URL"
+msgstr ""
+
+#: inc/options.php
+msgid "URL to POST to when a post is published or un-published. Leave empty to disable."
+msgstr ""
+
+#: inc/options.php
+msgid "Deploy Hook Secret"
+msgstr ""
+
+#: inc/options.php
+msgid "Optional secret for HMAC-SHA256 signing. Sent as X-Mainframe-Signature so your deploy service can verify the request is genuine."
+msgstr ""
+
+#: inc/options.php
+msgid "Deploy hook URL must be a valid http or https URL. The value was not saved."
+msgstr ""
+
+#: inc/rest.php
+msgid "Map of image size name to URL for the featured image."
+msgstr ""
+
+#: inc/rest.php
+msgid "Full author details for the post."
+msgstr ""
+
+#: inc/rest.php
+msgid "Ancestor post IDs from immediate parent to root, or empty array."
+msgstr ""
+
+#: inc/rest.php
+msgid "Categories assigned to the post with id, name, and slug."
+msgstr ""

@@ -18,6 +18,11 @@ Headless WordPress theme - full dashboard, full REST API, minimal public face.
 ### REST API
 - All registered post types are force-exposed via `show_in_rest` (opt-out available via the `mainframe_expose_post_type_in_rest` filter)
 - Every REST response includes `featured_media_url` — a direct image URL, no second request needed
+- `featured_media_sizes` field — map of registered size names to URLs (`thumbnail`, `medium`, `full`, …); external URLs return `{"full": url}`
+- `author_info` field — `{id, name, slug, avatar_url, description, url}` on every post, no second request to `/wp/v2/users/:id`
+- `ancestor_ids` field — ordered array of ancestor IDs (nearest-to-root) for hierarchical post types; `[]` for flat types
+- `categories_info` field — array of `{id, name, slug}` objects for each assigned category
+- `/wp-json/mainframe/v1/site` endpoint — one-call site summary: name, description, URL, logo, and all nav menus with top-level items
 - Configurable `Access-Control-Allow-Origin` header for cross-origin consuming apps
 
 ### Public frontend
@@ -36,6 +41,8 @@ Headless WordPress theme - full dashboard, full REST API, minimal public face.
 - Appearance > Patterns and Menus removed from admin nav (Menus managed in Customizer)
 - Settings > Reading and Discussion removed from admin nav
 - Block editor Discussion panel removed
+- Block editor **Preview** button removed — the WP frontend is not the consuming app
+- Classic editor Preview button removed via `preview_post_link` filter
 - Sensible defaults set on theme activation (see below)
 
 ### Featured Image URL field
@@ -49,16 +56,39 @@ Headless WordPress theme - full dashboard, full REST API, minimal public face.
 - Configured in Appearance > Mainframe Settings — paste a URL or pick from the media library
 - Never written to post meta; the post editor is unaffected
 
-### Defaults set on theme activation
-These are applied once when the theme is activated and do not affect existing content:
+### Deploy webhook
+- Fires a non-blocking HTTP POST to a configured URL whenever a post is published or un-published
+- JSON body: `{event, post_id, post_type, site_url}` — consumed directly by Vercel, Netlify, Cloudflare Pages deploy hooks
+- Optional secret adds an `X-Mainframe-Signature: sha256=<hmac>` header so the receiving service can verify authenticity
+- 10-second site-wide cooldown prevents flooding when multiple posts are saved at once
+- Configured in Appearance > Mainframe Settings (REST API section)
 
-| Setting | Value | Reason |
-|---|---|---|
-| `uploads_use_yearmonth_folders` | `0` | Flat upload structure (skipped if year folders already exist) |
-| `blog_public` | `0` | Discourage search engine indexing of the backend |
-| `default_pingback_flag` | `0` | No outbound ping notifications |
-| `default_ping_status` | `closed` | No inbound pingbacks/trackbacks on new posts |
-| `default_comment_status` | `closed` | No comments on new posts by default |
+### Robots / sitemap hardening
+- When "Discourage search engines" (`blog_public = 0`) is enabled, the WordPress core XML sitemap is disabled
+- `X-Robots-Tag: noindex, nofollow` is added to all public-facing page responses when the site is set to private
+- Both settings follow `blog_public` — toggled on/off during Headless Quick Setup
+
+### Live REST API Reference
+- **Appearance > REST API Reference** — a full, browseable reference page linked from a button in Mainframe Settings
+- Introspects the live REST API at render time: any field added by a plugin or custom code appears automatically without any manual update
+- Shows all `mainframe/v1` endpoints with their response schemas (field / type / description)
+- For every `show_in_rest` post type: extra fields (from `register_rest_field`) listed prominently with **Mainframe** or **Custom** source badges; WP core fields collapsed under a togglable disclosure
+- Object and array fields show their sub-property shapes inline
+
+### Headless Quick Setup
+On first activation the theme runs in **safe mode** — all WordPress content is publicly accessible at its standard URLs. A persistent admin notice points to the Quick Setup card in Mainframe Settings.
+
+The setup card lets you opt into headless defaults one checkbox at a time:
+
+| Option | What it does |
+|---|---|
+| Redirect all public routes to home | Sets Default Route Behavior to Redirect |
+| Discourage search engine indexing | Sets `blog_public = 0` |
+| Disable comments and pingbacks | Closes comments/pings on new posts |
+| Flat upload folder structure | Disables year/month subfolders (skipped if folders exist) |
+| Custom login URL slug | Sets a slug and blocks `/wp-login.php` |
+
+All settings are reversible from Mainframe Settings after setup. Dismissing the admin notice does not apply any settings.
 
 ---
 
@@ -85,8 +115,12 @@ These are applied once when the theme is activated and do not affect existing co
 | 404 behavior | Return a real 404 page or redirect home | redirect |
 | Login slug | URL slug for the login page | *(empty — wp-login.php active)* |
 | CORS origin | Allowed origin for REST API requests (empty = `*`) | *(empty)* |
-| Default route behavior | What singular posts do by default | redirect |
+| Default route behavior | What singular posts do by default | show |
 | Default featured image | Fallback image URL for posts with no featured image | *(empty)* |
+| Deploy hook URL | POST target for publish/unpublish events | *(empty)* |
+| Deploy hook secret | HMAC-SHA256 signing secret for deploy requests | *(empty)* |
+
+A **REST API Reference** button in the page header links to the live reference page.
 
 ---
 
@@ -138,9 +172,11 @@ mainframe/
     ├── cleanup.php            # wp_head cleanup, XML-RPC disable, admin menu cleanup
     ├── login.php              # Custom login URL slug
     ├── meta.php               # Per-post route behavior + featured image URL meta
+    ├── onboarding.php         # First-run headless setup wizard
     ├── options.php            # Mainframe Settings page + Customizer
     ├── redirects.php          # Public frontend redirect logic
-    └── rest.php               # REST API exposure + CORS + featured_media_url field
+    ├── rest-reference.php     # Live REST API Reference admin page
+    └── rest.php               # REST API exposure + CORS + all extra REST fields + site endpoint + deploy webhook
 ```
 
 ---

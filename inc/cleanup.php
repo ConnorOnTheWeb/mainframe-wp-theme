@@ -102,59 +102,78 @@ function mainframe_remove_settings_submenu_items(): void {
 	remove_submenu_page( 'options-general.php', 'options-discussion.php' );
 }
 
-add_action( 'after_switch_theme', 'mainframe_set_reading_discussion_defaults' );
+add_action( 'switch_theme', 'mainframe_cleanup_on_deactivation' );
 /**
- * Set sensible Reading and Discussion defaults on theme activation.
+ * Delete all Mainframe options when the user switches away from this theme.
  *
- * These are "new post" defaults and global flags — they do not retroactively
- * change existing posts, so switching to this theme on an existing site is
- * safe. Each option can still be changed per-post or via direct URL if needed.
- *
- * Reading:
- *   blog_public = 0 — discourage search engines. A headless backend should
- *   not be indexed directly; the consuming frontend handles SEO.
- *
- * Discussion:
- *   default_pingback_flag = 0 — don't attempt to notify linked blogs.
- *   default_ping_status   = closed — no pingbacks/trackbacks on new posts.
- *   default_comment_status = closed — no comments on new posts by default.
- *   Comments can still be enabled per-post and are fully accessible via
- *   the REST API when a post has comment_status = open.
+ * Prevents orphaned wp_options rows if the theme is deactivated or deleted.
+ * User-visible settings are included so the database is left fully clean.
+ * Re-activating the theme will trigger onboarding again if setup was never
+ * completed (the mainframe_setup_complete flag is also deleted).
  */
-function mainframe_set_reading_discussion_defaults(): void {
-	update_option( 'blog_public',              0 );
-	update_option( 'default_pingback_flag',    0 );
-	update_option( 'default_ping_status',      'closed' );
-	update_option( 'default_comment_status',   'closed' );
+function mainframe_cleanup_on_deactivation(): void {
+	$options = [
+		'mainframe_redirect_type',
+		'mainframe_404_behavior',
+		'mainframe_login_slug',
+		'mainframe_cors_origin',
+		'mainframe_default_route_behavior',
+		'mainframe_default_featured_image_url',
+		'mainframe_deploy_hook_url',
+		'mainframe_deploy_hook_secret',
+		'mainframe_onboarding_pending',
+		'mainframe_setup_complete',
+	];
+	foreach ( $options as $option ) {
+		delete_option( $option );
+	}
 }
 
-add_action( 'after_switch_theme', 'mainframe_set_upload_defaults' );
+// ---------------------------------------------------------------------------
+// Robots / sitemap hardening — honour the site visibility setting
+// ---------------------------------------------------------------------------
+
+add_action( 'send_headers', 'mainframe_maybe_add_noindex_header' );
 /**
- * Set upload folder defaults on theme activation.
+ * Add X-Robots-Tag: noindex, nofollow when the site is set to private.
  *
- * Disables year/month subfolders so all uploads land in /wp-content/uploads/
- * directly — cleaner for a headless setup where paths are referenced via the
- * REST API.
+ * WordPress sets blog_public = 0 when the admin chooses "Discourage search
+ * engines". On a headless install the public frontend is a separate app,
+ * so the WP frontend templates should reinforce this with an HTTP header
+ * rather than relying solely on the meta robots tag that live inside
+ * individual templates.
  *
- * Safety: skipped if the uploads directory already contains year/month
- * subfolders (4-digit year directory), which would mean an existing site has
- * content organised that way. Changing mid-stream would split the folder
- * structure; the admin can update the setting manually in Settings > Media.
+ * Only fires on public-facing requests — skips admin, REST API, and cron.
  */
-function mainframe_set_upload_defaults(): void {
-	$upload_dir = wp_upload_dir();
-	$base       = $upload_dir['basedir'];
-
-	// Check for any existing year-based subdirectory (e.g. 2023/, 2024/).
-	if ( is_dir( $base ) ) {
-		$entries = scandir( $base );
-		foreach ( $entries as $entry ) {
-			if ( preg_match( '/^\d{4}$/', $entry ) && is_dir( $base . DIRECTORY_SEPARATOR . $entry ) ) {
-				// Year/month structure already in use — leave the setting alone.
-				return;
-			}
-		}
+function mainframe_maybe_add_noindex_header(): void {
+	if ( get_option( 'blog_public' ) ) {
+		return; // Site is public — do not add noindex.
 	}
+	if ( is_admin() ) {
+		return;
+	}
+	if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+		return;
+	}
+	if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		return;
+	}
+	header( 'X-Robots-Tag: noindex, nofollow', true );
+}
 
-	update_option( 'uploads_use_yearmonth_folders', 0 );
+add_filter( 'wp_sitemaps_enabled', 'mainframe_disable_sitemap_when_private' );
+/**
+ * Disable the WordPress core sitemap when the site is set to private.
+ *
+ * A headless install that has opted into search-engine discouragement
+ * should not broadcast a sitemap that spiders can discover and follow.
+ *
+ * @param bool $enabled Whether the sitemap feature is enabled.
+ * @return bool False when blog_public = 0, unchanged otherwise.
+ */
+function mainframe_disable_sitemap_when_private( bool $enabled ): bool {
+	if ( ! get_option( 'blog_public' ) ) {
+		return false;
+	}
+	return $enabled;
 }

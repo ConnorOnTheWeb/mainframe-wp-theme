@@ -59,7 +59,7 @@ function mainframe_render_route_meta_box( WP_Post $post ): void {
 	wp_nonce_field( 'mainframe_save_route_behavior_' . $post->ID, 'mainframe_route_behavior_nonce' );
 
 	$saved   = get_post_meta( $post->ID, '_mainframe_route_behavior', true );
-	$default = get_option( 'mainframe_default_route_behavior', 'redirect' );
+	$default = get_option( 'mainframe_default_route_behavior', 'show' );
 
 	// Determine which label to show for the site default.
 	$default_label = 'redirect' === $default
@@ -239,12 +239,13 @@ function mainframe_register_featured_image_url_meta(): void {
 			'',
 			'fifu_image_url',
 			[
-				'type'          => 'string',
-				'description'   => 'FIFU plugin featured image URL (migration compatibility, read-only).',
-				'single'        => true,
-				'default'       => '',
-				'show_in_rest'  => true,
-				'auth_callback' => '__return_false', // Read-only — never writable via REST.
+				'type'              => 'string',
+				'description'       => 'FIFU plugin featured image URL (migration compatibility, read-only).',
+				'single'            => true,
+				'default'           => '',
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'auth_callback'     => '__return_false', // Read-only — never writable via REST.
 			]
 		);
 	}
@@ -259,8 +260,14 @@ add_action( 'add_meta_boxes', 'mainframe_register_featured_image_url_meta_box' )
  * sidebar panel via the registered block editor plugin script).
  */
 function mainframe_register_featured_image_url_meta_box(): void {
-	// Skip if the block editor is active for this request — the JS panel handles it.
-	if ( did_action( 'enqueue_block_editor_assets' ) ) {
+	// Skip if the block editor is active — the JS sidebar panel handles it there.
+	//
+	// did_action('enqueue_block_editor_assets') cannot be used here: WordPress
+	// fires add_meta_boxes at the very top of edit-form-advanced.php, before any
+	// script enqueuing, so that counter is always 0 at this point regardless of
+	// which editor is active.
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	if ( $screen && $screen->is_block_editor() ) {
 		return;
 	}
 
@@ -368,6 +375,8 @@ function mainframe_enqueue_featured_image_url_editor_script(): void {
 		true
 	);
 
+	wp_set_script_translations( 'mainframe-featured-image-url', 'mainframe', get_template_directory() . '/languages' );
+
 	// Remove the Discussion panel from the block editor sidebar — comment and
 	// ping status are controlled by site defaults and REST API, not the editor UI.
 	wp_add_inline_script(
@@ -375,3 +384,14 @@ function mainframe_enqueue_featured_image_url_editor_script(): void {
 		'wp.domReady( function () { wp.data.dispatch( "core/edit-post" ).removeEditorPanel( "discussion-panel" ); } );'
 	);
 }
+
+add_filter( 'preview_post_link', '__return_empty_string' );
+/**
+ * Remove the Preview button from the classic editor.
+ *
+ * The WordPress frontend is not the consuming app on a headless install.
+ * Returning an empty string causes the classic editor to hide the button
+ * entirely. The block editor preview is handled via JS in featured-image-url.js.
+ *
+ * __return_empty_string is a native WP helper — no custom function needed.
+ */

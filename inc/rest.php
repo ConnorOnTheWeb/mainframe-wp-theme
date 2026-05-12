@@ -173,3 +173,459 @@ function mainframe_register_featured_media_url_field(): void {
 		]
 	);
 }
+
+// ---------------------------------------------------------------------------
+// featured_media_sizes — all registered sizes for the featured image
+// ---------------------------------------------------------------------------
+
+add_action( 'rest_api_init', 'mainframe_register_featured_media_sizes_field' );
+/**
+ * Add a `featured_media_sizes` field to all post type REST API responses.
+ *
+ * Returns an object keyed by size name (thumbnail, medium, large, full, …)
+ * mapping to URL. For external URLs (custom field, FIFU, default option) only
+ * the 'full' key is returned since no resized variants exist.
+ * Returns an empty object when no featured image is available at all.
+ */
+function mainframe_register_featured_media_sizes_field(): void {
+	$post_types = get_post_types( [ 'show_in_rest' => true ] );
+
+	register_rest_field(
+		array_values( $post_types ),
+		'featured_media_sizes',
+		[
+			'get_callback' => static function ( array $post ): array {
+				$post_id = isset( $post['id'] ) ? (int) $post['id'] : 0;
+				if ( ! $post_id ) {
+					return [];
+				}
+
+				// External URL sources — return only 'full', no resized variants.
+				$custom = (string) get_post_meta( $post_id, '_mainframe_featured_image_url', true );
+				if ( '' !== $custom ) {
+					return [ 'full' => $custom ];
+				}
+
+				$fifu = (string) get_post_meta( $post_id, 'fifu_image_url', true );
+				if ( '' !== $fifu ) {
+					return [ 'full' => $fifu ];
+				}
+
+				// WordPress attached image — return all registered sizes.
+				$thumbnail_id = (int) get_post_thumbnail_id( $post_id );
+				if ( $thumbnail_id ) {
+					$sizes  = [];
+					$labels = get_intermediate_image_sizes();
+					$labels[] = 'full';
+					foreach ( $labels as $size ) {
+						$src = wp_get_attachment_image_url( $thumbnail_id, $size );
+						if ( $src ) {
+							$sizes[ $size ] = $src;
+						}
+					}
+					if ( ! empty( $sizes ) ) {
+						return $sizes;
+					}
+				}
+
+				// Site-wide default — external URL, return only 'full'.
+				$default = (string) get_option( 'mainframe_default_featured_image_url', '' );
+				if ( '' !== $default ) {
+					return [ 'full' => $default ];
+				}
+
+				return [];
+			},
+			'schema' => [
+				'description'          => __( 'Map of image size name to URL for the featured image.', 'mainframe' ),
+				'type'                 => 'object',
+				'additionalProperties' => [ 'type' => 'string', 'format' => 'uri' ],
+				'context'              => [ 'view', 'edit', 'embed' ],
+				'readonly'             => true,
+			],
+		]
+	);
+}
+
+// ---------------------------------------------------------------------------
+// author_info — full author details on the post object
+// ---------------------------------------------------------------------------
+
+add_action( 'rest_api_init', 'mainframe_register_author_info_field' );
+/**
+ * Add an `author_info` field to all post type REST API responses.
+ *
+ * Returns name, slug, avatar URL, bio, and website URL so consuming apps
+ * do not need a second request to /wp/v2/users/:id.
+ * Returns null for post types that do not have an author or when no author
+ * is assigned.
+ */
+function mainframe_register_author_info_field(): void {
+	$post_types = get_post_types( [ 'show_in_rest' => true ] );
+
+	register_rest_field(
+		array_values( $post_types ),
+		'author_info',
+		[
+			'get_callback' => static function ( array $post ): ?array {
+				$author_id = isset( $post['author'] ) ? (int) $post['author'] : 0;
+				if ( ! $author_id ) {
+					return null;
+				}
+
+				$user = get_userdata( $author_id );
+				if ( ! $user ) {
+					return null;
+				}
+
+				return [
+					'id'          => $author_id,
+					'name'        => $user->display_name,
+					'slug'        => $user->user_nicename,
+					'avatar_url'  => get_avatar_url( $author_id, [ 'size' => 96 ] ) ?: '',
+					'description' => get_the_author_meta( 'description', $author_id ),
+					'url'         => $user->user_url,
+				];
+			},
+			'schema' => [
+				'description' => __( 'Full author details for the post.', 'mainframe' ),
+				'type'        => [ 'object', 'null' ],
+				'properties'  => [
+					'id'          => [ 'type' => 'integer' ],
+					'name'        => [ 'type' => 'string' ],
+					'slug'        => [ 'type' => 'string' ],
+					'avatar_url'  => [ 'type' => 'string', 'format' => 'uri' ],
+					'description' => [ 'type' => 'string' ],
+					'url'         => [ 'type' => 'string' ],
+				],
+				'context'     => [ 'view', 'edit', 'embed' ],
+				'readonly'    => true,
+			],
+		]
+	);
+}
+
+// ---------------------------------------------------------------------------
+// ancestor_ids — ordered list of ancestor post IDs for hierarchical types
+// ---------------------------------------------------------------------------
+
+add_action( 'rest_api_init', 'mainframe_register_ancestor_ids_field' );
+/**
+ * Add an `ancestor_ids` field to all post type REST API responses.
+ *
+ * Returns an array of ancestor IDs ordered nearest-to-root (immediate parent
+ * first, root last). Returns an empty array for non-hierarchical post types
+ * and for top-level posts with no ancestors.
+ */
+function mainframe_register_ancestor_ids_field(): void {
+	$post_types = get_post_types( [ 'show_in_rest' => true ] );
+
+	register_rest_field(
+		array_values( $post_types ),
+		'ancestor_ids',
+		[
+			'get_callback' => static function ( array $post ): array {
+				$post_id   = isset( $post['id'] ) ? (int) $post['id'] : 0;
+				if ( ! $post_id ) {
+					return [];
+				}
+				$post_type = get_post_type( $post_id );
+				if ( ! $post_type ) {
+					return [];
+				}
+				$type_obj = get_post_type_object( $post_type );
+				if ( ! $type_obj || ! $type_obj->hierarchical ) {
+					return [];
+				}
+				return array_values( get_ancestors( $post_id, $post_type, 'post_type' ) );
+			},
+			'schema' => [
+				'description' => __( 'Ancestor post IDs from immediate parent to root, or empty array.', 'mainframe' ),
+				'type'        => 'array',
+				'items'       => [ 'type' => 'integer' ],
+				'context'     => [ 'view', 'edit', 'embed' ],
+				'readonly'    => true,
+			],
+		]
+	);
+}
+
+// ---------------------------------------------------------------------------
+// categories_info — plain name and slug for each category on the post
+// ---------------------------------------------------------------------------
+
+add_action( 'rest_api_init', 'mainframe_register_categories_info_field' );
+/**
+ * Add a `categories_info` field to all post type REST API responses.
+ *
+ * Returns an array of objects with id, name, and slug for every category
+ * term assigned to the post. Returns an empty array when no categories are
+ * assigned or when the post type does not support the category taxonomy.
+ */
+function mainframe_register_categories_info_field(): void {
+	$post_types = get_post_types( [ 'show_in_rest' => true ] );
+
+	register_rest_field(
+		array_values( $post_types ),
+		'categories_info',
+		[
+			'get_callback' => static function ( array $post ): array {
+				$post_id = isset( $post['id'] ) ? (int) $post['id'] : 0;
+				if ( ! $post_id ) {
+					return [];
+				}
+				$terms = get_the_terms( $post_id, 'category' );
+				if ( ! $terms || is_wp_error( $terms ) ) {
+					return [];
+				}
+				$result = [];
+				foreach ( $terms as $term ) {
+					$result[] = [
+						'id'   => (int) $term->term_id,
+						'name' => $term->name,
+						'slug' => $term->slug,
+					];
+				}
+				return $result;
+			},
+			'schema' => [
+				'description' => __( 'Categories assigned to the post with id, name, and slug.', 'mainframe' ),
+				'type'        => 'array',
+				'items'       => [
+					'type'       => 'object',
+					'properties' => [
+						'id'   => [ 'type' => 'integer' ],
+						'name' => [ 'type' => 'string' ],
+						'slug' => [ 'type' => 'string' ],
+					],
+				],
+				'context'     => [ 'view', 'edit', 'embed' ],
+				'readonly'    => true,
+			],
+		]
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Site data endpoint — /wp-json/mainframe/v1/site
+// ---------------------------------------------------------------------------
+
+add_action( 'rest_api_init', 'mainframe_register_site_endpoint' );
+/**
+ * Register the /mainframe/v1/site read-only endpoint.
+ *
+ * Returns a one-call summary of the site's public identity and all nav menu
+ * link cards, eliminating the need for multiple bootstrap requests from the
+ * consuming frontend app.
+ */
+function mainframe_register_site_endpoint(): void {
+	register_rest_route(
+		'mainframe/v1',
+		'/site',
+		[
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'mainframe_site_endpoint_callback',
+			'permission_callback' => '__return_true',
+			'schema'              => 'mainframe_site_endpoint_schema',
+		]
+	);
+}
+
+/**
+ * Return the JSON schema for the /mainframe/v1/site response.
+ *
+ * Registering a schema callback makes the structure machine-readable and
+ * allows the REST API Reference admin page to display it without hardcoding.
+ *
+ * @return array JSON Schema array describing the site endpoint response.
+ */
+function mainframe_site_endpoint_schema(): array {
+	return [
+		'$schema'    => 'http://json-schema.org/draft-04/schema#',
+		'title'      => 'mainframe-site',
+		'type'       => 'object',
+		'properties' => [
+			'name'        => [
+				'description' => __( 'Site title.', 'mainframe' ),
+				'type'        => 'string',
+				'context'     => [ 'view' ],
+			],
+			'description' => [
+				'description' => __( 'Site tagline.', 'mainframe' ),
+				'type'        => 'string',
+				'context'     => [ 'view' ],
+			],
+			'url'         => [
+				'description' => __( 'Site home URL.', 'mainframe' ),
+				'type'        => 'string',
+				'format'      => 'uri',
+				'context'     => [ 'view' ],
+			],
+			'logo_url'    => [
+				'description' => __( 'Full URL of the site logo, or empty string if none.', 'mainframe' ),
+				'type'        => 'string',
+				'context'     => [ 'view' ],
+			],
+			'logo_id'     => [
+				'description' => __( 'Attachment ID of the site logo, or null if none.', 'mainframe' ),
+				'type'        => [ 'integer', 'null' ],
+				'context'     => [ 'view' ],
+			],
+			'menus'       => [
+				'description' => __( 'All registered nav menus in creation order, top-level items only.', 'mainframe' ),
+				'type'        => 'array',
+				'context'     => [ 'view' ],
+				'items'       => [
+					'type'       => 'object',
+					'properties' => [
+						'id'    => [ 'type' => 'integer', 'description' => __( 'Menu term ID.', 'mainframe' ) ],
+						'name'  => [ 'type' => 'string',  'description' => __( 'Menu name.', 'mainframe' ) ],
+						'items' => [
+							'type'        => 'array',
+							'description' => __( 'Top-level menu items.', 'mainframe' ),
+							'items'       => [
+								'type'       => 'object',
+								'properties' => [
+									'id'     => [ 'type' => 'integer', 'description' => __( 'Menu item post ID.', 'mainframe' ) ],
+									'title'  => [ 'type' => 'string',  'description' => __( 'Menu item label.', 'mainframe' ) ],
+									'url'    => [ 'type' => 'string', 'format' => 'uri', 'description' => __( 'Target URL.', 'mainframe' ) ],
+									'target' => [ 'type' => 'string',  'description' => __( 'Link target attribute (_blank or empty).', 'mainframe' ) ],
+								],
+							],
+						],
+					],
+				],
+			],
+		],
+	];
+}
+
+/**
+ * Callback for /mainframe/v1/site.
+ *
+ * @param WP_REST_Request $request The REST request object.
+ * @return WP_REST_Response Site identity and menu data.
+ */
+function mainframe_site_endpoint_callback( WP_REST_Request $request ): WP_REST_Response {
+	// Site identity.
+	$logo_id  = (int) get_theme_mod( 'custom_logo', 0 );
+	$logo_url = '';
+	if ( $logo_id ) {
+		$src      = wp_get_attachment_image_url( $logo_id, 'full' );
+		$logo_url = $src ?: '';
+	}
+
+	// Nav menus — all menus in creation order, top-level items only.
+	$menus_data = [];
+	$all_menus  = wp_get_nav_menus( [ 'orderby' => 'term_id', 'order' => 'ASC' ] );
+
+	if ( is_array( $all_menus ) ) {
+		foreach ( $all_menus as $menu ) {
+			$raw = wp_get_nav_menu_items( (int) $menu->term_id );
+			if ( ! is_array( $raw ) ) {
+				continue;
+			}
+			$items = [];
+			foreach ( $raw as $item ) {
+				if ( '0' !== (string) $item->menu_item_parent ) {
+					continue; // Skip sub-items — only flat custom links are used.
+				}
+				$items[] = [
+					'id'     => (int) $item->ID,
+					'title'  => $item->title,
+					'url'    => $item->url,
+					'target' => $item->target,
+				];
+			}
+			$menus_data[] = [
+				'id'    => (int) $menu->term_id,
+				'name'  => $menu->name,
+				'items' => $items,
+			];
+		}
+	}
+
+	return new WP_REST_Response(
+		[
+			'name'        => get_bloginfo( 'name' ),
+			'description' => get_bloginfo( 'description' ),
+			'url'         => home_url(),
+			'logo_url'    => $logo_url,
+			'logo_id'     => $logo_id ?: null,
+			'menus'       => $menus_data,
+		],
+		200
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Deploy webhook — fire on post publish/unpublish
+// ---------------------------------------------------------------------------
+
+add_action( 'transition_post_status', 'mainframe_maybe_trigger_deploy', 10, 3 );
+/**
+ * Trigger the configured deploy webhook when a post is published or
+ * transitions out of publish status.
+ *
+ * A 10-second site-wide cooldown transient prevents flooding the endpoint
+ * when multiple posts are saved in quick succession.
+ *
+ * The request is non-blocking so the webhook does not delay the admin save.
+ * An optional HMAC-SHA256 signature is sent in X-Mainframe-Signature when a
+ * secret is configured, allowing the receiving service to verify authenticity.
+ *
+ * @param string  $new_status The new post status.
+ * @param string  $old_status The previous post status.
+ * @param WP_Post $post       The post being saved.
+ */
+function mainframe_maybe_trigger_deploy( string $new_status, string $old_status, WP_Post $post ): void {
+	// Only fire on publish transitions — entering or leaving publish.
+	$relevant = ( 'publish' === $new_status || 'publish' === $old_status );
+	if ( ! $relevant ) {
+		return;
+	}
+
+	// Skip revisions and auto-drafts.
+	if ( in_array( $post->post_type, [ 'revision', 'auto-draft' ], true ) ) {
+		return;
+	}
+
+	$url = trim( (string) get_option( 'mainframe_deploy_hook_url', '' ) );
+	if ( empty( $url ) ) {
+		return;
+	}
+
+	// Rate-limit: one trigger per 10 seconds site-wide.
+	$cooldown_key = 'mainframe_deploy_cooldown';
+	if ( get_transient( $cooldown_key ) ) {
+		return;
+	}
+	set_transient( $cooldown_key, '1', 10 );
+
+	$payload = (string) wp_json_encode( [
+		'event'     => 'publish' === $new_status ? 'published' : 'unpublished',
+		'post_id'   => $post->ID,
+		'post_type' => $post->post_type,
+		'site_url'  => home_url(),
+	] );
+
+	$headers = [
+		'Content-Type' => 'application/json',
+		'User-Agent'   => 'WordPress/' . get_bloginfo( 'version' ) . '; Mainframe-Theme',
+	];
+
+	$secret = trim( (string) get_option( 'mainframe_deploy_hook_secret', '' ) );
+	if ( ! empty( $secret ) ) {
+		$headers['X-Mainframe-Signature'] = 'sha256=' . hash_hmac( 'sha256', $payload, $secret );
+	}
+
+	wp_safe_remote_post(
+		$url,
+		[
+			'body'     => $payload,
+			'headers'  => $headers,
+			'timeout'  => 5,
+			'blocking' => false, // Fire-and-forget — do not block the admin save.
+		]
+	);
+}

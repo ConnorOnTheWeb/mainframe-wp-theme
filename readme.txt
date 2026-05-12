@@ -29,6 +29,7 @@ Features:
 * Linktree-style front page with logo, headline, message, and nav menu link cards
 * Custom login URL slug (blocks /wp-login.php when active)
 * Per-post public route behavior: show content, redirect to home, or use site default
+* First-run Headless Quick Setup wizard (opt-in — safe mode by default)
 * Sensible admin cleanup — irrelevant Customizer sections, menu items hidden
 
 == Installation ==

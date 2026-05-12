@@ -18,6 +18,8 @@ require_once get_template_directory() . '/inc/rest.php';
 require_once get_template_directory() . '/inc/redirects.php';
 require_once get_template_directory() . '/inc/meta.php';
 require_once get_template_directory() . '/inc/login.php';
+require_once get_template_directory() . '/inc/onboarding.php';
+require_once get_template_directory() . '/inc/rest-reference.php';
 
 add_action( 'after_setup_theme', 'mainframe_theme_setup' );
 /**

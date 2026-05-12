@@ -136,6 +136,6 @@ function mainframe_get_post_behavior( int $post_id ): string {
 	}
 
 	// No explicit meta — use the global default.
-	$default = get_option( 'mainframe_default_route_behavior', 'redirect' );
+	$default = get_option( 'mainframe_default_route_behavior', 'show' );
 	return 'redirect' === $default ? 'redirect' : 'show';
 }
