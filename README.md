@@ -70,6 +70,12 @@ Headless WordPress theme - full dashboard, full REST API, minimal public face.
 - `X-Robots-Tag: noindex, nofollow` is added to all public-facing page responses when the site is set to private
 - Both settings follow `blog_public` — toggled on/off during Headless Quick Setup
 
+### Auto-updates
+- WordPress notifies admins of new releases in Appearance → Themes — identical to a wordpress.org theme, no plugin required
+- Checks the GitHub Releases API (cached 12 hours) and compares against the installed version
+- One-click update installs the `mainframe.zip` attached to the latest release
+- "View version details" popup shows the release changelog pulled from GitHub
+
 ### Live REST API Reference
 - **Appearance > REST API Reference** — a full, browseable reference page linked from a button in Mainframe Settings
 - Introspects the live REST API at render time: any field added by a plugin or custom code appears automatically without any manual update
@@ -160,6 +166,7 @@ add_filter( 'mainframe_redirect_code', fn() => 302 );
 
 ```
 mainframe/
+├── screenshot.jpg             # Theme preview image
 ├── style.css                  # Theme header (no styles)
 ├── functions.php              # Bootstrap loader + theme supports
 ├── front-page.php             # Public-facing front page template
@@ -178,7 +185,8 @@ mainframe/
     ├── options.php            # Mainframe Settings page + Customizer
     ├── redirects.php          # Public frontend redirect logic
     ├── rest-reference.php     # Live REST API Reference admin page
-    └── rest.php               # REST API exposure + CORS + all extra REST fields + site endpoint + deploy webhook
+    ├── rest.php               # REST API exposure + CORS + all extra REST fields + site endpoint + deploy webhook
+    └── updater.php            # GitHub Releases auto-updater
 ```
 
 ---
