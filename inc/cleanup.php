@@ -127,6 +127,7 @@ function mainframe_cleanup_on_deactivation(): void {
 	foreach ( $options as $option ) {
 		delete_option( $option );
 	}
+	delete_transient( MAINFRAME_UPDATE_CACHE_KEY );
 }
 
 // ---------------------------------------------------------------------------
