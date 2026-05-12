@@ -139,3 +139,52 @@ function mainframe_get_post_behavior( int $post_id ): string {
 	$default = get_option( 'mainframe_default_route_behavior', 'show' );
 	return 'redirect' === $default ? 'redirect' : 'show';
 }
+
+// ---------------------------------------------------------------------------
+// Block editor permalink — rewrite domain to configured frontend URL
+// ---------------------------------------------------------------------------
+
+add_filter( 'get_sample_permalink', 'mainframe_rewrite_sample_permalink', 10, 5 );
+/**
+ * Rewrite the block editor's permalink display to show the frontend URL.
+ *
+ * Delegates to mainframe_build_frontend_link() (defined in inc/rest.php, which
+ * is loaded before this file) so the editor and the REST frontend_link field
+ * are always in sync, including any mainframe_frontend_link filter callbacks.
+ *
+ * get_sample_permalink() returns [structure_with_%postname%, slug]. We resolve
+ * the full URL then replace the slug back with %postname% so WordPress can
+ * render the slug as an editable field in the sidebar.
+ *
+ * @param array       $permalink Array of [permalink_structure, post_name].
+ * @param int         $post_id   Post ID.
+ * @param string|null $title     Optional post title.
+ * @param string|null $name      Optional post slug.
+ * @param WP_Post     $post      Post object.
+ * @return array Permalink array with domain/path potentially rewritten.
+ */
+function mainframe_rewrite_sample_permalink( array $permalink, int $post_id, ?string $title, ?string $name, WP_Post $post ): array {
+	$frontend_url = get_option( 'mainframe_frontend_url', '' );
+	if ( empty( $frontend_url ) && ! has_filter( 'mainframe_frontend_link' ) ) {
+		return $permalink;
+	}
+
+	// Build the full resolved URL via the shared helper (applies the
+	// mainframe_frontend_link filter, including any path rewrites).
+	// Then split it back into the [structure, post_name] shape that
+	// get_sample_permalink expects: replace the slug token with %postname%.
+	$resolved = mainframe_build_frontend_link( $post_id );
+	if ( empty( $resolved ) ) {
+		return $permalink;
+	}
+
+	$slug = $post->post_name ?: sanitize_title( $post->post_title );
+	if ( $slug ) {
+		$permalink[0] = str_replace( $slug, '%postname%', $resolved );
+		$permalink[1] = $slug;
+	} else {
+		$permalink[0] = $resolved;
+	}
+
+	return $permalink;
+}

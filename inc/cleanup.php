@@ -121,6 +121,7 @@ function mainframe_cleanup_on_deactivation(): void {
 		'mainframe_default_featured_image_url',
 		'mainframe_deploy_hook_url',
 		'mainframe_deploy_hook_secret',
+		'mainframe_frontend_url',
 		'mainframe_onboarding_pending',
 		'mainframe_setup_complete',
 	];
