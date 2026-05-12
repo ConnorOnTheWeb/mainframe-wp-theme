@@ -22,13 +22,20 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           ZIPNAME="mainframe.zip"
 
-          zip -r "$ZIPNAME" . \
-            --exclude '*.git*' \
-            --exclude '.github/*' \
-            --exclude 'README.md' \
-            --exclude 'bin/*' \
-            --exclude '.DS_Store' \
-            --exclude '*.zip'
+          # Copy filtered files into /tmp/mainframe/ so the zip contains a
+          # single top-level "mainframe/" folder — required by the WordPress
+          # theme installer and correct for manual extraction.
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='README.md' \
+            --exclude='bin/' \
+            --exclude='.DS_Store' \
+            --exclude='*.zip' \
+            . /tmp/mainframe/
+
+          cd /tmp
+          zip -r "$GITHUB_WORKSPACE/$ZIPNAME" mainframe/
 
           echo "ZIPNAME=$ZIPNAME" >> "$GITHUB_ENV"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"

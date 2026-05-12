@@ -16,12 +16,20 @@ cd "$THEME_ROOT"
 # Remove any previous build.
 rm -f "$DEST"
 
-zip -r "$ZIPNAME" . \
-  --exclude '*.git*' \
-  --exclude '.github/*' \
-  --exclude 'README.md' \
-  --exclude 'bin/*' \
-  --exclude '.DS_Store' \
-  --exclude '*.zip'
+# Copy filtered files into /tmp/mainframe/ so the zip contains a single
+# top-level "mainframe/" folder — required by the WordPress theme installer.
+rm -rf /tmp/mainframe
+rsync -a \
+  --exclude='.git/' \
+  --exclude='.github/' \
+  --exclude='README.md' \
+  --exclude='bin/' \
+  --exclude='.DS_Store' \
+  --exclude='*.zip' \
+  . /tmp/mainframe/
+
+cd /tmp
+zip -r "$DEST" mainframe/
+rm -rf /tmp/mainframe
 
 echo "Built: ${DEST}"
