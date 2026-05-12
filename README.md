@@ -6,6 +6,8 @@ Headless WordPress theme - full dashboard, full REST API, minimal public face.
 
 [Download latest release](https://github.com/ConnorOnTheWeb/mainframe-wp-theme/releases/latest/download/mainframe.zip)
 
+Safari might try to automatically unzip the release folder, re-zip (right click and "compress") or adjust your Safari settings. Chrome, Firefox, etc should download as the drag-and-droppable zip file. 
+
 ---
 
 ## Requirements
