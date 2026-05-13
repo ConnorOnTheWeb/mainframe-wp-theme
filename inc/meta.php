@@ -383,6 +383,15 @@ function mainframe_enqueue_featured_image_url_editor_script(): void {
 		'mainframe-featured-image-url',
 		'wp.domReady( function () { wp.data.dispatch( "core/edit-post" ).removeEditorPanel( "discussion-panel" ); } );'
 	);
+
+	// Hide the permalink display in the block editor. The WP URL is not the
+	// consuming app's URL and has no meaningful value for editors.
+	// .editor-post-url__permalink — slug panel permalink row (post/page editor)
+	// .edit-post-header-permalink  — legacy header permalink bar (older WP)
+	wp_add_inline_style(
+		'wp-edit-post',
+		'.editor-post-url__permalink, .edit-post-header-permalink { display: none !important; }'
+	);
 }
 
 add_filter( 'preview_post_link', '__return_empty_string' );

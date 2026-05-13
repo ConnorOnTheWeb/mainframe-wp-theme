@@ -140,14 +140,37 @@
 		);
 	}
 
-	// Remove the Preview button — the WordPress frontend is not the consuming
-	// app on a headless install. Returning null suppresses the button entirely.
+	// Remove UI elements that link to the WordPress URL — irrelevant on a
+	// headless install where the WP frontend is not the consuming app.
+
+	// Preview button (top toolbar).
 	addFilter(
 		'editor.PostPreview',
 		'mainframe/disable-preview',
 		createHigherOrderComponent(
 			function () { return function () { return null; }; },
 			'MainframeDisablePreview'
+		)
+	);
+
+	// "View Post" link in the post-publish panel.
+	addFilter(
+		'editor.PostPublishPanelPostpublish',
+		'mainframe/disable-postpublish-link',
+		createHigherOrderComponent(
+			function ( PostPublishPanelPostpublish ) {
+				return function ( props ) {
+					// Render the panel normally but inject a style that hides
+					// the "View Post" anchor — the only WP-URL element in it.
+					return el( wp.element.Fragment, null,
+						el( 'style', null,
+							'.editor-post-publish-panel__postpublish-buttons a { display: none !important; }'
+						),
+						el( PostPublishPanelPostpublish, props )
+					);
+				};
+			},
+			'MainframeDisablePostpublishLink'
 		)
 	);
 

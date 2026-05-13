@@ -127,7 +127,6 @@ All settings are reversible from Mainframe Settings after setup. Dismissing the 
 | CORS origin | Allowed origin for REST API requests (empty = `*`) | *(empty)* |
 | Default route behavior | What singular posts do by default | show |
 | Default featured image | Fallback image URL for posts with no featured image | *(empty)* |
-| Frontend URL | Public URL of the consuming frontend app; rewrites editor permalinks and adds `frontend_link` to REST responses | *(empty)* |
 | Deploy hook URL | POST target for publish/unpublish events | *(empty)* |
 | Deploy hook secret | HMAC-SHA256 signing secret for deploy requests | *(empty)* |
 
@@ -163,22 +162,24 @@ add_filter( 'mainframe_expose_post_type_in_rest', function ( $expose, $post_type
 add_filter( 'mainframe_redirect_code', fn() => 302 );
 ```
 
-### Customize the `frontend_link` URL structure
+### Customize the `frontend_link` URL per post type
 
-The `frontend_link` REST field and the block editor permalink display both start from the WordPress permalink with the domain swapped, then pass the result through the `mainframe_frontend_link` filter. Use this when your frontend app uses a different path structure:
+Every REST response includes a `frontend_link` field — the WordPress permalink passed through the `mainframe_frontend_link` filter. By default it equals the WP permalink. Add a filter in your theme's `functions.php` or a custom plugin to map it to your frontend app's URL structure:
 
 ```php
-// Example: posts live at /blog/{slug} on the frontend.
 add_filter( 'mainframe_frontend_link', function ( $url, $post_id, $post_type ) {
+    $slug = get_post_field( 'post_name', $post_id );
     if ( 'post' === $post_type ) {
-        $slug = get_post_field( 'post_name', $post_id );
         return 'https://www.yoursite.com/blog/' . $slug;
+    }
+    if ( 'page' === $post_type ) {
+        return 'https://www.yoursite.com/' . $slug;
     }
     return $url;
 }, 10, 3 );
 ```
 
-The URL passed to the filter has no trailing slash. Return values should also omit trailing slashes.
+Return values should omit trailing slashes.
 
 ---
 

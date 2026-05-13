@@ -126,16 +126,6 @@ function mainframe_register_settings(): void {
 		]
 	);
 
-	register_setting(
-		'mainframe_settings_group',
-		'mainframe_frontend_url',
-		[
-			'type'              => 'string',
-			'default'           => '',
-			'sanitize_callback' => 'mainframe_sanitize_frontend_url',
-		]
-	);
-
 	// ------------------------------------------------------------------
 	// Section: Public Frontend
 	// ------------------------------------------------------------------
@@ -199,14 +189,6 @@ function mainframe_register_settings(): void {
 		__( 'REST API', 'mainframe' ),
 		'__return_false',
 		'mainframe-settings'
-	);
-
-	add_settings_field(
-		'mainframe_frontend_url',
-		__( 'Frontend URL', 'mainframe' ),
-		'mainframe_render_frontend_url_field',
-		'mainframe-settings',
-		'mainframe_section_rest'
 	);
 
 	add_settings_field(
@@ -417,26 +399,6 @@ function mainframe_render_deploy_hook_url_field(): void {
 }
 
 /**
- * Render the Frontend URL field.
- */
-function mainframe_render_frontend_url_field(): void {
-	$value = get_option( 'mainframe_frontend_url', '' );
-	?>
-	<input
-		type="url"
-		id="mainframe_frontend_url"
-		name="mainframe_frontend_url"
-		value="<?php echo esc_attr( $value ); ?>"
-		class="regular-text"
-		placeholder="https://www.yoursite.com"
-	>
-	<p class="description">
-		<?php esc_html_e( 'The public URL of your consuming frontend app. Rewrites permalinks in the block editor and adds a frontend_link field to all REST API responses.', 'mainframe' ); ?>
-	</p>
-	<?php
-}
-
-/**
  * Render the Deploy Hook Secret field.
  */
 function mainframe_render_deploy_hook_secret_field(): void {
@@ -601,29 +563,6 @@ function mainframe_sanitize_deploy_hook_url( $value ): string {
 		return get_option( 'mainframe_deploy_hook_url', '' );
 	}
 	return $url;
-}
-
-/**
- * Sanitize the frontend URL option.
- *
- * @param mixed $value Raw input value.
- * @return string Sanitized URL, or empty string.
- */
-function mainframe_sanitize_frontend_url( $value ): string {
-	$value = trim( (string) $value );
-	if ( empty( $value ) ) {
-		return '';
-	}
-	$url = esc_url_raw( $value, [ 'http', 'https' ] );
-	if ( empty( $url ) ) {
-		add_settings_error(
-			'mainframe_frontend_url',
-			'mainframe_frontend_url_invalid',
-			__( 'Frontend URL must be a valid http or https URL. The value was not saved.', 'mainframe' )
-		);
-		return get_option( 'mainframe_frontend_url', '' );
-	}
-	return untrailingslashit( $url );
 }
 
 /**

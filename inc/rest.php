@@ -408,47 +408,7 @@ function mainframe_register_categories_info_field(): void {
 
 // ---------------------------------------------------------------------------
 // frontend_link — canonical URL on the consuming frontend app
-// Rewrite REST link field — fixes editor permalink href
 // ---------------------------------------------------------------------------
-
-add_action( 'rest_api_init', 'mainframe_hook_rest_link_rewrite', 20 );
-/**
- * Register a rest_prepare_{$type} filter for every show_in_rest post type.
- *
- * Priority 20 ensures all post types have been registered and their
- * show_in_rest flags resolved before we iterate.
- *
- * The native `link` field in each REST response is what Gutenberg uses as the
- * href of the permalink anchor in the block editor sidebar. Without this,
- * our get_sample_permalink rewrite correctly changes the display text but the
- * underlying href still points to the WordPress URL.
- */
-function mainframe_hook_rest_link_rewrite(): void {
-	$frontend_url = get_option( 'mainframe_frontend_url', '' );
-	if ( empty( $frontend_url ) && ! has_filter( 'mainframe_frontend_link' ) ) {
-		return;
-	}
-	foreach ( get_post_types( [ 'show_in_rest' => true ] ) as $type ) {
-		add_filter( "rest_prepare_{$type}", 'mainframe_rewrite_rest_link_field', 10, 2 );
-	}
-}
-
-/**
- * Replace the native `link` field in a REST post response with the frontend URL.
- *
- * @param WP_REST_Response $response The response object.
- * @param WP_Post          $post     The post object.
- * @return WP_REST_Response Response with link rewritten.
- */
-function mainframe_rewrite_rest_link_field( WP_REST_Response $response, WP_Post $post ): WP_REST_Response {
-	$link = mainframe_build_frontend_link( $post->ID );
-	if ( $link ) {
-		$data         = $response->get_data();
-		$data['link'] = $link;
-		$response->set_data( $data );
-	}
-	return $response;
-}
 
 add_action( 'rest_api_init', 'mainframe_register_frontend_link_field' );
 /**
@@ -507,34 +467,22 @@ function mainframe_build_frontend_link( int $post_id ): string {
 		return '';
 	}
 
-	$frontend_url = get_option( 'mainframe_frontend_url', '' );
-	if ( ! empty( $frontend_url ) ) {
-		$url = str_replace(
-			untrailingslashit( home_url() ),
-			untrailingslashit( $frontend_url ),
-			$permalink
-		);
-	} else {
-		$url = $permalink;
-	}
-
 	$post_type = get_post_type( $post_id ) ?: '';
 
 	/**
 	 * Filter the frontend URL for a post.
 	 *
-	 * Use this to rewrite the path for your app's routing structure —
-	 * for example, prefixing posts with /blog/ or constructing a
-	 * completely custom URL scheme.
+	 * Use this hook to map the WordPress permalink to the correct URL on
+	 * your consuming frontend app — for example, prefixing posts with
+	 * /blog/ or constructing a completely custom URL scheme.
 	 *
-	 * The URL passed to this filter has no trailing slash. Return values
-	 * should also omit trailing slashes.
+	 * Return a URL without a trailing slash.
 	 *
-	 * @param string $url       The computed frontend URL (after domain swap, no trailing slash).
+	 * @param string $url       The WordPress permalink (no trailing slash).
 	 * @param int    $post_id   Post ID.
 	 * @param string $post_type Post type slug.
 	 */
-	return (string) apply_filters( 'mainframe_frontend_link', untrailingslashit( $url ), $post_id, $post_type );
+	return (string) apply_filters( 'mainframe_frontend_link', untrailingslashit( $permalink ), $post_id, $post_type );
 }
 
 // ---------------------------------------------------------------------------
