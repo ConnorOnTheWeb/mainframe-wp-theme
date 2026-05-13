@@ -384,13 +384,25 @@ function mainframe_enqueue_featured_image_url_editor_script(): void {
 		'wp.domReady( function () { wp.data.dispatch( "core/edit-post" ).removeEditorPanel( "discussion-panel" ); } );'
 	);
 
-	// Hide the permalink display in the block editor. The WP URL is not the
-	// consuming app's URL and has no meaningful value for editors.
-	// .editor-post-url__permalink — slug panel permalink row (post/page editor)
-	// .edit-post-header-permalink  — legacy header permalink bar (older WP)
+	// Hide WP-domain URLs and navigation from the block editor. The WordPress
+	// URL is not the consuming app's URL and has no meaningful value for editors.
 	wp_add_inline_style(
 		'wp-edit-post',
-		'.editor-post-url__permalink, .edit-post-header-permalink { display: none !important; }'
+		// Permalink row in the slug panel (sidebar) and legacy header permalink bar.
+		'.editor-post-url__permalink, .edit-post-header-permalink { display: none !important; }' .
+		// Post-publish panel: hide the "What's next?" heading, address input,
+		// View Post button, and Add Post button.
+		'.post-publish-panel__postpublish-subheader,' .
+		'.post-publish-panel__postpublish-post-address,' .
+		'.post-publish-panel__postpublish-post-address-container,' .
+		'.post-publish-panel__postpublish-buttons { display: none !important; }' .
+		// Remove link styling from the "Title is now live." header so it renders
+		// as plain text — the WP permalink is not the frontend URL.
+		'.post-publish-panel__postpublish-header a,' .
+		'.post-publish-panel__postpublish-header a:hover,' .
+		'.post-publish-panel__postpublish-header a:focus' .
+		'{ pointer-events:none !important; color:inherit !important; text-decoration:none !important; }' .
+		'.post-publish-panel__postpublish-header a svg { display: none !important; }'
 	);
 }
 

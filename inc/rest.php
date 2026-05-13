@@ -427,7 +427,8 @@ function mainframe_register_frontend_link_field(): void {
 		'frontend_link',
 		[
 			'get_callback' => static function ( array $post ): string {
-				return mainframe_build_frontend_link( (int) $post['id'] );
+				$id = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
+				return $id ? mainframe_build_frontend_link( $id ) : '';
 			},
 			'schema' => [
 				'description' => __( 'Canonical URL of the post on the consuming frontend app. Use the mainframe_frontend_link filter to adjust the path for your routing structure.', 'mainframe' ),

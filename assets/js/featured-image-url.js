@@ -153,26 +153,9 @@
 		)
 	);
 
-	// "View Post" link in the post-publish panel.
-	addFilter(
-		'editor.PostPublishPanelPostpublish',
-		'mainframe/disable-postpublish-link',
-		createHigherOrderComponent(
-			function ( PostPublishPanelPostpublish ) {
-				return function ( props ) {
-					// Render the panel normally but inject a style that hides
-					// the "View Post" anchor — the only WP-URL element in it.
-					return el( wp.element.Fragment, null,
-						el( 'style', null,
-							'.editor-post-publish-panel__postpublish-buttons a { display: none !important; }'
-						),
-						el( PostPublishPanelPostpublish, props )
-					);
-				};
-			},
-			'MainframeDisablePostpublishLink'
-		)
-	);
+	// The post-publish "What's next?" section (address, View Post, Add Post) is
+	// suppressed via CSS injected in inc/meta.php. The WP block editor does not
+	// expose a JS filter for this component — extensibility is Slot/Fill only.
 
 	registerPlugin( 'mainframe-featured-image-url', {
 		render: FeaturedImageUrlPanel,
