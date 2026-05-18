@@ -130,7 +130,7 @@ function mainframe_register_featured_media_url_field(): void {
 		'featured_media_url',
 		[
 			'get_callback' => static function ( array $post ): string {
-				$post_id = isset( $post['id'] ) ? (int) $post['id'] : 0;
+				$post_id = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
 				if ( ! $post_id ) {
 					return '';
 				}
@@ -195,7 +195,7 @@ function mainframe_register_featured_media_sizes_field(): void {
 		'featured_media_sizes',
 		[
 			'get_callback' => static function ( array $post ): array {
-				$post_id = isset( $post['id'] ) ? (int) $post['id'] : 0;
+				$post_id = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
 				if ( ! $post_id ) {
 					return [];
 				}
@@ -325,7 +325,7 @@ function mainframe_register_ancestor_ids_field(): void {
 		'ancestor_ids',
 		[
 			'get_callback' => static function ( array $post ): array {
-				$post_id   = isset( $post['id'] ) ? (int) $post['id'] : 0;
+				$post_id   = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
 				if ( ! $post_id ) {
 					return [];
 				}
@@ -370,7 +370,7 @@ function mainframe_register_categories_info_field(): void {
 		'categories_info',
 		[
 			'get_callback' => static function ( array $post ): array {
-				$post_id = isset( $post['id'] ) ? (int) $post['id'] : 0;
+				$post_id = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
 				if ( ! $post_id ) {
 					return [];
 				}
