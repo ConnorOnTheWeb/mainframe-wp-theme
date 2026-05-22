@@ -69,5 +69,27 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.5 =
+* Custom HTML blocks now show a dashed outline and minimum height in the block editor so script-only blocks (e.g. ld+json) are not invisible.
+
+= 1.0.4 =
+* Confirmed compatibility with WordPress 7.0.
+
+= 1.0.3 =
+* Fixed REST field callbacks (`featured_media_url`, `featured_media_sizes`, `author_info`, `ancestor_ids`, `categories_info`, `frontend_link`) failing to return data in some contexts due to a `$post['id']` vs `$post['ID']` key mismatch. All custom fields now return correct values on both single-post and collection endpoints.
+
+= 1.0.2 =
+* Fixed post-publish panel hiding — updated to correct CSS class names (`post-publish-panel__postpublish-*`) and suppressed the full "What's next?" section including address input, View Post button, and Add Post button.
+* Removed non-functional `editor.PostLink` JS filter (WP 6.5+ uses Slot/Fill for this panel; no `applyFilters` hook exists).
+
+= 1.0.1 =
+* Added `frontend_link` REST field to all post type responses. Passes the WP permalink through the `mainframe_frontend_link` filter so developers can map to their frontend app's URL structure.
+* Added `featured_media_url`, `featured_media_sizes`, `author_info`, `ancestor_ids`, and `categories_info` REST fields to all post type responses.
+* Removed Frontend URL admin setting — per-post-type routing cannot be handled by a single domain setting; use the `mainframe_frontend_link` filter instead.
+* Block editor: hid WP permalink display in the slug panel and legacy header permalink bar.
+* Block editor: hid the Preview button (WP frontend is not the consuming app on a headless install).
+* Block editor: hid the post-publish "View Post" link.
+* Removed WP sample permalink rewriting from the editor.
+
 = 1.0.0 =
 * Initial release.

@@ -406,6 +406,26 @@ function mainframe_enqueue_featured_image_url_editor_script(): void {
 	);
 }
 
+add_filter( 'block_editor_settings_all', 'mainframe_editor_canvas_styles' );
+/**
+ * Inject styles into the iframed block editor canvas.
+ *
+ * These are loaded inside the editor iframe (block content area) and never
+ * appear in REST API output or on the frontend.
+ *
+ * Gives Custom HTML blocks (core/html) a visible minimum height and dashed
+ * outline so that script-only blocks (e.g. ld+json) are not invisible.
+ *
+ * @param array $settings Block editor settings array.
+ * @return array Modified settings.
+ */
+function mainframe_editor_canvas_styles( array $settings ): array {
+	$settings['styles'][] = [
+		'css' => '.wp-block-html { min-height: 2em !important; outline: 2px dashed rgba(0,0,0,.15) !important; outline-offset: 3px; }',
+	];
+	return $settings;
+}
+
 add_filter( 'preview_post_link', '__return_empty_string' );
 /**
  * Remove the Preview button from the classic editor.
