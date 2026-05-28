@@ -248,6 +248,79 @@ function mainframe_register_featured_media_sizes_field(): void {
 }
 
 // ---------------------------------------------------------------------------
+// featured_media_meta — alt text, title, caption, dimensions for the featured image
+// ---------------------------------------------------------------------------
+
+add_action( 'rest_api_init', 'mainframe_register_featured_media_meta_field' );
+/**
+ * Add a `featured_media_meta` field to all post type REST API responses.
+ *
+ * Returns alt text, title, caption, width, and height for the featured image.
+ * For attached WordPress images all five values are populated from the
+ * attachment object. For external URL sources (custom field, FIFU, default
+ * option) the field returns null — no attachment metadata exists for those.
+ *
+ * This field is additive and does not affect featured_media_url or
+ * featured_media_sizes.
+ */
+function mainframe_register_featured_media_meta_field(): void {
+	$post_types = get_post_types( [ 'show_in_rest' => true ] );
+
+	register_rest_field(
+		array_values( $post_types ),
+		'featured_media_meta',
+		[
+			'get_callback' => static function ( array $post ): ?array {
+				$post_id = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
+				if ( ! $post_id ) {
+					return null;
+				}
+
+				// External URL sources have no attachment metadata.
+				$custom = (string) get_post_meta( $post_id, '_mainframe_featured_image_url', true );
+				if ( '' !== $custom ) {
+					return null;
+				}
+
+				$fifu = (string) get_post_meta( $post_id, 'fifu_image_url', true );
+				if ( '' !== $fifu ) {
+					return null;
+				}
+
+				// Attached featured image — return full metadata.
+				$thumbnail_id = (int) get_post_thumbnail_id( $post_id );
+				if ( ! $thumbnail_id ) {
+					return null;
+				}
+
+				$meta = wp_get_attachment_metadata( $thumbnail_id );
+
+				return [
+					'alt'     => (string) get_post_meta( $thumbnail_id, '_wp_attachment_image_alt', true ),
+					'title'   => get_the_title( $thumbnail_id ),
+					'caption' => wp_get_attachment_caption( $thumbnail_id ) ?: '',
+					'width'   => isset( $meta['width'] ) ? (int) $meta['width'] : null,
+					'height'  => isset( $meta['height'] ) ? (int) $meta['height'] : null,
+				];
+			},
+			'schema' => [
+				'description' => __( 'Alt text, title, caption, and dimensions for the featured image. Null for external URL images.', 'mainframe' ),
+				'type'        => [ 'object', 'null' ],
+				'properties'  => [
+					'alt'     => [ 'type' => 'string' ],
+					'title'   => [ 'type' => 'string' ],
+					'caption' => [ 'type' => 'string' ],
+					'width'   => [ 'type' => [ 'integer', 'null' ] ],
+					'height'  => [ 'type' => [ 'integer', 'null' ] ],
+				],
+				'context'     => [ 'view', 'edit', 'embed' ],
+				'readonly'    => true,
+			],
+		]
+	);
+}
+
+// ---------------------------------------------------------------------------
 // author_info — full author details on the post object
 // ---------------------------------------------------------------------------
 
@@ -399,6 +472,102 @@ function mainframe_register_categories_info_field(): void {
 						'slug' => [ 'type' => 'string' ],
 					],
 				],
+				'context'     => [ 'view', 'edit', 'embed' ],
+				'readonly'    => true,
+			],
+		]
+	);
+}
+
+// ---------------------------------------------------------------------------
+// tags_info — tag details on the post object
+// ---------------------------------------------------------------------------
+
+add_action( 'rest_api_init', 'mainframe_register_tags_info_field' );
+/**
+ * Add a `tags_info` field to all post type REST API responses.
+ *
+ * Returns an array of objects with id, name, and slug for every post_tag
+ * term assigned to the post. Returns an empty array when no tags are
+ * assigned or when the post type does not support the post_tag taxonomy.
+ */
+function mainframe_register_tags_info_field(): void {
+	$post_types = get_post_types( [ 'show_in_rest' => true ] );
+
+	register_rest_field(
+		array_values( $post_types ),
+		'tags_info',
+		[
+			'get_callback' => static function ( array $post ): array {
+				$post_id = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
+				if ( ! $post_id ) {
+					return [];
+				}
+				$terms = get_the_terms( $post_id, 'post_tag' );
+				if ( ! $terms || is_wp_error( $terms ) ) {
+					return [];
+				}
+				$result = [];
+				foreach ( $terms as $term ) {
+					$result[] = [
+						'id'   => (int) $term->term_id,
+						'name' => $term->name,
+						'slug' => $term->slug,
+					];
+				}
+				return $result;
+			},
+			'schema' => [
+				'description' => __( 'Tags assigned to the post with id, name, and slug.', 'mainframe' ),
+				'type'        => 'array',
+				'items'       => [
+					'type'       => 'object',
+					'properties' => [
+						'id'   => [ 'type' => 'integer' ],
+						'name' => [ 'type' => 'string' ],
+						'slug' => [ 'type' => 'string' ],
+					],
+				],
+				'context'     => [ 'view', 'edit', 'embed' ],
+				'readonly'    => true,
+			],
+		]
+	);
+}
+
+// ---------------------------------------------------------------------------
+// reading_time — estimated reading time in minutes
+// ---------------------------------------------------------------------------
+
+add_action( 'rest_api_init', 'mainframe_register_reading_time_field' );
+/**
+ * Add a `reading_time` field to all post type REST API responses.
+ *
+ * Strips HTML from the post content, counts words, and divides by 200 wpm.
+ * Returns an integer of at least 1. Returns 0 for post types with no content.
+ */
+function mainframe_register_reading_time_field(): void {
+	$post_types = get_post_types( [ 'show_in_rest' => true ] );
+
+	register_rest_field(
+		array_values( $post_types ),
+		'reading_time',
+		[
+			'get_callback' => static function ( array $post ): int {
+				$content = $post['content']['rendered'] ?? '';
+				if ( '' === $content ) {
+					$post_id = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
+					$content = $post_id ? (string) get_post_field( 'post_content', $post_id ) : '';
+				}
+				if ( '' === $content ) {
+					return 0;
+				}
+				$words = str_word_count( wp_strip_all_tags( $content ) );
+				return (int) max( 1, ceil( $words / 200 ) );
+			},
+			'schema' => [
+				'description' => __( 'Estimated reading time in minutes, based on 200 words per minute.', 'mainframe' ),
+				'type'        => 'integer',
 				'context'     => [ 'view', 'edit', 'embed' ],
 				'readonly'    => true,
 			],

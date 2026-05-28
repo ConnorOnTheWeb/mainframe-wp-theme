@@ -69,6 +69,11 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.6 =
+* Added `featured_media_meta` REST field to all post type responses: returns `{alt, title, caption, width, height}` for attached featured images; `null` for external URL images.
+* Added `tags_info` REST field to all post type responses: returns `[{id, name, slug}]` for each assigned tag.
+* Added `reading_time` REST field to all post type responses: estimated reading time in minutes based on 200 wpm.
+
 = 1.0.5 =
 * Custom HTML blocks now show a dashed outline and minimum height in the block editor so script-only blocks (e.g. ld+json) are not invisible.
 

@@ -26,6 +26,9 @@ Safari might try to automatically unzip the release folder, re-zip (right click 
 - `author_info` field — `{id, name, slug, avatar_url, description, url}` on every post, no second request to `/wp/v2/users/:id`
 - `ancestor_ids` field — ordered array of ancestor IDs (nearest-to-root) for hierarchical post types; `[]` for flat types
 - `categories_info` field — array of `{id, name, slug}` objects for each assigned category
+- `tags_info` field — array of `{id, name, slug}` objects for each assigned tag
+- `reading_time` field — estimated reading time in minutes (integer, minimum 1; based on 200 wpm)
+- `featured_media_meta` field — `{alt, title, caption, width, height}` for attached featured images; `null` for external URL images (custom field, FIFU, site default)
 - `/wp-json/mainframe/v1/site` endpoint — one-call site summary: name, description, URL, logo, and all nav menus with top-level items
 - Configurable `Access-Control-Allow-Origin` header for cross-origin consuming apps
 

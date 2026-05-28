@@ -191,9 +191,12 @@ function mainframe_render_rest_reference_page(): void {
 	$mainframe_fields = [
 		'featured_media_url',
 		'featured_media_sizes',
+		'featured_media_meta',
 		'author_info',
 		'ancestor_ids',
 		'categories_info',
+		'tags_info',
+		'reading_time',
 	];
 
 	// -------------------------------------------------------------------------
