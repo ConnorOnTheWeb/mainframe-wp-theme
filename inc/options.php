@@ -811,15 +811,17 @@ function mainframe_render_settings_page(): void {
 	}
 	?>
 	<div class="wrap">
-		<h1 class="wp-heading-inline"><?php echo esc_html( get_admin_page_title() ); ?></h1>
-		<a href="<?php echo esc_url( admin_url( 'themes.php?page=mainframe-rest-reference' ) ); ?>" class="page-title-action"><?php esc_html_e( 'REST API Reference', 'mainframe' ); ?></a>
+		<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 		<?php
 		$check_url = wp_nonce_url(
 			add_query_arg( 'mainframe_check_updates', '1', admin_url( 'themes.php?page=mainframe-settings' ) ),
 			'mainframe_check_updates'
 		);
 		?>
-		<a href="<?php echo esc_url( $check_url ); ?>" class="page-title-action"><?php esc_html_e( 'Check for Updates', 'mainframe' ); ?></a>
+		<p>
+			<a href="<?php echo esc_url( admin_url( 'themes.php?page=mainframe-rest-reference' ) ); ?>" class="button"><?php esc_html_e( 'REST API Reference', 'mainframe' ); ?></a>
+			<a href="<?php echo esc_url( $check_url ); ?>" class="button"><?php esc_html_e( 'Check for Updates', 'mainframe' ); ?></a>
+		</p>
 		<hr class="wp-header-end">
 		<?php if ( isset( $_GET['mainframe_updated'] ) && 'cache_cleared' === $_GET['mainframe_updated'] ) : ?>
 			<div class="notice notice-success is-dismissible">

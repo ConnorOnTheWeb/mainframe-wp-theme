@@ -69,6 +69,9 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.8 =
+* Moved "REST API Reference" and "Check for Updates" buttons below the settings page title.
+
 = 1.0.7 =
 * Reduced update check cache from 12 hours to 2 hours so new releases are detected sooner.
 * Added "Check for Updates" button to Mainframe Settings — clears the update cache and forces WordPress to re-check immediately.
