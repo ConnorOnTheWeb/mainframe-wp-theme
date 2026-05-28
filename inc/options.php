@@ -29,6 +29,35 @@ function mainframe_add_settings_page(): void {
 	);
 }
 
+add_action( 'admin_init', 'mainframe_handle_check_updates' );
+/**
+ * Handle the "Check for Updates" button on the Mainframe Settings page.
+ *
+ * Deletes the cached GitHub release transient so the next update check
+ * fetches fresh data from the API, then redirects back to the settings page
+ * with a success notice.
+ */
+function mainframe_handle_check_updates(): void {
+	if (
+		! isset( $_GET['mainframe_check_updates'] ) ||
+		! current_user_can( 'manage_options' ) ||
+		! check_admin_referer( 'mainframe_check_updates' )
+	) {
+		return;
+	}
+
+	delete_transient( MAINFRAME_UPDATE_CACHE_KEY );
+
+	// Force WordPress to re-check theme updates immediately.
+	delete_site_transient( 'update_themes' );
+
+	wp_safe_redirect( add_query_arg(
+		[ 'page' => 'mainframe-settings', 'mainframe_updated' => 'cache_cleared' ],
+		admin_url( 'themes.php' )
+	) );
+	exit;
+}
+
 // ---------------------------------------------------------------------------
 // Settings API registration
 // ---------------------------------------------------------------------------
@@ -784,7 +813,19 @@ function mainframe_render_settings_page(): void {
 	<div class="wrap">
 		<h1 class="wp-heading-inline"><?php echo esc_html( get_admin_page_title() ); ?></h1>
 		<a href="<?php echo esc_url( admin_url( 'themes.php?page=mainframe-rest-reference' ) ); ?>" class="page-title-action"><?php esc_html_e( 'REST API Reference', 'mainframe' ); ?></a>
+		<?php
+		$check_url = wp_nonce_url(
+			add_query_arg( 'mainframe_check_updates', '1', admin_url( 'themes.php?page=mainframe-settings' ) ),
+			'mainframe_check_updates'
+		);
+		?>
+		<a href="<?php echo esc_url( $check_url ); ?>" class="page-title-action"><?php esc_html_e( 'Check for Updates', 'mainframe' ); ?></a>
 		<hr class="wp-header-end">
+		<?php if ( isset( $_GET['mainframe_updated'] ) && 'cache_cleared' === $_GET['mainframe_updated'] ) : ?>
+			<div class="notice notice-success is-dismissible">
+				<p><?php esc_html_e( 'Update cache cleared. WordPress will check for the latest version shortly.', 'mainframe' ); ?></p>
+			</div>
+		<?php endif; ?>
 		<?php settings_errors(); ?>
 		<?php do_action( 'mainframe_settings_page_top' ); ?>
 		<form method="post" action="options.php">

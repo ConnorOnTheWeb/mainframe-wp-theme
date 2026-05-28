@@ -77,9 +77,10 @@ Safari might try to automatically unzip the release folder, re-zip (right click 
 
 ### Auto-updates
 - WordPress notifies admins of new releases in Appearance → Themes — identical to a wordpress.org theme, no plugin required
-- Checks the GitHub Releases API (cached 12 hours) and compares against the installed version
+- Checks the GitHub Releases API (cached 2 hours) and compares against the installed version
 - One-click update installs the `mainframe.zip` attached to the latest release
 - "View version details" popup shows the release changelog pulled from GitHub
+- **"Check for Updates"** button in Mainframe Settings clears the cache and triggers an immediate re-check
 
 ### Live REST API Reference
 - **Appearance > REST API Reference** — a full, browseable reference page linked from a button in Mainframe Settings

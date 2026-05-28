@@ -69,6 +69,10 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.7 =
+* Reduced update check cache from 12 hours to 2 hours so new releases are detected sooner.
+* Added "Check for Updates" button to Mainframe Settings — clears the update cache and forces WordPress to re-check immediately.
+
 = 1.0.6 =
 * Added `featured_media_meta` REST field to all post type responses: returns `{alt, title, caption, width, height}` for attached featured images; `null` for external URL images.
 * Added `tags_info` REST field to all post type responses: returns `[{id, name, slug}]` for each assigned tag.

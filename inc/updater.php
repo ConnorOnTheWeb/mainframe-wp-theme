@@ -28,8 +28,8 @@ const MAINFRAME_THEME_SLUG = 'mainframe';
 /** Transient key used to cache the GitHub API response. */
 const MAINFRAME_UPDATE_CACHE_KEY = 'mainframe_github_release';
 
-/** How long to cache the GitHub API response (12 hours). */
-const MAINFRAME_UPDATE_CACHE_TTL = 12 * HOUR_IN_SECONDS;
+/** How long to cache the GitHub API response (2 hours). */
+const MAINFRAME_UPDATE_CACHE_TTL = 2 * HOUR_IN_SECONDS;
 
 // ---------------------------------------------------------------------------
 // Inject update data into WordPress's theme update transient
