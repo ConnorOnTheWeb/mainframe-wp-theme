@@ -102,6 +102,27 @@ function mainframe_remove_settings_submenu_items(): void {
 	remove_submenu_page( 'options-general.php', 'options-discussion.php' );
 }
 
+// ---------------------------------------------------------------------------
+// Suppress automatic update notification emails (opt-in)
+// ---------------------------------------------------------------------------
+
+add_action( 'init', 'mainframe_maybe_suppress_update_emails' );
+/**
+ * Suppress all automatic-update notification emails when the admin has
+ * opted in to this setting. Off by default — admins who want update emails
+ * (especially for security releases) should leave this disabled.
+ *
+ * Covers: WordPress core, plugins, and themes.
+ */
+function mainframe_maybe_suppress_update_emails(): void {
+	if ( ! get_option( 'mainframe_suppress_update_emails', false ) ) {
+		return;
+	}
+	add_filter( 'auto_core_update_send_email',   '__return_false' );
+	add_filter( 'auto_plugin_update_send_email', '__return_false' );
+	add_filter( 'auto_theme_update_send_email',  '__return_false' );
+}
+
 add_action( 'switch_theme', 'mainframe_cleanup_on_deactivation' );
 /**
  * Delete all Mainframe options when the user switches away from this theme.
@@ -123,6 +144,7 @@ function mainframe_cleanup_on_deactivation(): void {
 		'mainframe_deploy_hook_secret',
 		'mainframe_onboarding_pending',
 		'mainframe_setup_complete',
+		'mainframe_suppress_update_emails',
 	];
 	foreach ( $options as $option ) {
 		delete_option( $option );

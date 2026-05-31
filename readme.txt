@@ -69,6 +69,9 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.11 =
+* Added "Suppress automatic update notification emails" option. Available as an onboarding checkbox (unchecked by default) and as a toggle under Mainframe Settings → Admin. Disables the emails WordPress sends after automatic core, plugin, and theme updates.
+
 = 1.0.10 =
 * JS-Dependent Blocks section is now a collapsed <details>/<summary> dropdown, matching the Standard Blocks section. Both sections start collapsed, and the quick-action buttons still work on their contents regardless of open/closed state.
 

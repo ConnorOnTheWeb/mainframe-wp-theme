@@ -240,6 +240,20 @@ function mainframe_render_setup_card(): void {
 
 					<tr>
 						<td style="width:24px;vertical-align:top;padding:6px 0;">
+							<input type="checkbox" name="mf_suppress_update_emails" id="mf_suppress_update_emails" value="1">
+						</td>
+						<td style="padding:4px 0 12px 10px;">
+							<label for="mf_suppress_update_emails" style="font-weight:600;display:block;">
+								<?php esc_html_e( 'Suppress automatic update notification emails', 'mainframe' ); ?>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'Stops WordPress sending emails after automatic core, plugin, and theme updates. Leave unchecked if you want those notifications — especially useful for security releases.', 'mainframe' ); ?>
+							</p>
+						</td>
+					</tr>
+
+					<tr>
+						<td style="width:24px;vertical-align:top;padding:6px 0;">
 							<input type="checkbox" name="mf_block_manager" id="mf_block_manager" value="1" checked>
 						</td>
 						<td style="padding:4px 0 12px 10px;">
@@ -328,6 +342,11 @@ function mainframe_handle_apply_headless(): void {
 	// Flat upload folder structure.
 	if ( ! empty( $_POST['mf_uploads'] ) ) {
 		mainframe_apply_upload_defaults();
+	}
+
+	// Suppress automatic update notification emails.
+	if ( ! empty( $_POST['mf_suppress_update_emails'] ) ) {
+		update_option( 'mainframe_suppress_update_emails', true );
 	}
 
 	// Block Manager — hide JS-dependent blocks from the inserter.

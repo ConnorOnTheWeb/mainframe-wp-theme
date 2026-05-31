@@ -155,6 +155,16 @@ function mainframe_register_settings(): void {
 		]
 	);
 
+	register_setting(
+		'mainframe_settings_group',
+		'mainframe_suppress_update_emails',
+		[
+			'type'              => 'boolean',
+			'default'           => false,
+			'sanitize_callback' => fn( $v ) => (bool) $v,
+		]
+	);
+
 	// ------------------------------------------------------------------
 	// Section: Public Frontend
 	// ------------------------------------------------------------------
@@ -250,6 +260,25 @@ function mainframe_register_settings(): void {
 		'mainframe_render_deploy_hook_secret_field',
 		'mainframe-settings',
 		'mainframe_section_rest'
+	);
+
+	// ------------------------------------------------------------------
+	// Section: Admin
+	// ------------------------------------------------------------------
+
+	add_settings_section(
+		'mainframe_section_admin',
+		__( 'Admin', 'mainframe' ),
+		'__return_false',
+		'mainframe-settings'
+	);
+
+	add_settings_field(
+		'mainframe_suppress_update_emails',
+		__( 'Update Emails', 'mainframe' ),
+		'mainframe_render_suppress_update_emails_field',
+		'mainframe-settings',
+		'mainframe_section_admin'
 	);
 }
 
@@ -443,6 +472,26 @@ function mainframe_render_deploy_hook_secret_field(): void {
 	>
 	<p class="description">
 		<?php esc_html_e( 'Optional secret for HMAC-SHA256 signing. Sent as X-Mainframe-Signature so your deploy service can verify the request is genuine.', 'mainframe' ); ?>
+	</p>
+	<?php
+}
+
+/**
+ * Render the Suppress Update Emails checkbox.
+ */
+function mainframe_render_suppress_update_emails_field(): void {
+	$value = get_option( 'mainframe_suppress_update_emails', false );
+	?>
+	<input type="hidden" name="mainframe_suppress_update_emails" value="0">
+	<label>
+		<input type="checkbox"
+		       name="mainframe_suppress_update_emails"
+		       value="1"
+		       <?php checked( (bool) $value ); ?>>
+		<?php esc_html_e( 'Suppress automatic update notification emails', 'mainframe' ); ?>
+	</label>
+	<p class="description">
+		<?php esc_html_e( 'Disables the emails WordPress sends after automatic core, plugin, and theme updates. Useful when you monitor updates another way and find these emails noisy.', 'mainframe' ); ?>
 	</p>
 	<?php
 }
