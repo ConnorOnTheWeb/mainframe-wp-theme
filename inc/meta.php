@@ -390,18 +390,21 @@ function mainframe_enqueue_featured_image_url_editor_script(): void {
 		'wp-edit-post',
 		// Permalink row in the slug panel (sidebar) and legacy header permalink bar.
 		'.editor-post-url__permalink, .edit-post-header-permalink { display: none !important; }' .
-		// Post-publish panel: hide the "What's next?" heading, address input,
-		// View Post button, and Add Post button.
+		// Preview dropdown button — top toolbar (desktop) and overflow/more menu
+		// (mobile). The JS filter editor.PostPreview removes the React component;
+		// CSS catches any secondary render paths WP uses on narrow viewports.
+		'.editor-preview-dropdown, .editor-header__post-preview-button { display: none !important; }' .
+		// Pre-publish checks panel: hide the site card (shows WP backend name/URL,
+		// not the consuming frontend app — meaningless for editors).
+		'.components-site-card { display: none !important; }' .
+		// Post-publish panel: hide the raw WP address input — it points to the WP
+		// backend, not the consuming frontend app. The View Post button is kept
+		// because it now links to the frontend app URL when one is configured.
 		'.post-publish-panel__postpublish-subheader,' .
 		'.post-publish-panel__postpublish-post-address,' .
-		'.post-publish-panel__postpublish-post-address-container,' .
-		'.post-publish-panel__postpublish-buttons { display: none !important; }' .
+		'.post-publish-panel__postpublish-post-address-container { display: none !important; }' .
 		// Remove link styling from the "Title is now live." header so it renders
 		// as plain text — the WP permalink is not the frontend URL.
-		'.post-publish-panel__postpublish-header a,' .
-		'.post-publish-panel__postpublish-header a:hover,' .
-		'.post-publish-panel__postpublish-header a:focus' .
-		'{ pointer-events:none !important; color:inherit !important; text-decoration:none !important; }' .
 		'.post-publish-panel__postpublish-header a svg { display: none !important; }'
 	);
 }
@@ -426,13 +429,122 @@ function mainframe_editor_canvas_styles( array $settings ): array {
 	return $settings;
 }
 
-add_filter( 'preview_post_link', '__return_empty_string' );
+// ---------------------------------------------------------------------------
+// Per-page frontend URL meta box
+// ---------------------------------------------------------------------------
+
+add_action( 'add_meta_boxes', 'mainframe_register_frontend_page_url_meta_box', 10, 2 );
 /**
- * Remove the Preview button from the classic editor.
+ * Register the "Frontend Page URL" meta box, but only on published pages.
  *
- * The WordPress frontend is not the consuming app on a headless install.
- * Returning an empty string causes the classic editor to hide the button
- * entirely. The block editor preview is handled via JS in featured-image-url.js.
- *
- * __return_empty_string is a native WP helper — no custom function needed.
+ * The slug can still change on drafts, so there is nothing reliable to
+ * point to until the page is live.
  */
+function mainframe_register_frontend_page_url_meta_box( string $post_type, WP_Post $post ): void {
+	if ( 'page' !== $post_type || 'publish' !== $post->post_status ) {
+		return;
+	}
+	add_meta_box(
+		'mainframe_frontend_page_url',
+		__( 'Frontend Page URL', 'mainframe' ),
+		'mainframe_render_frontend_page_url_meta_box',
+		'page',
+		'side',
+		'default'
+	);
+}
+
+/**
+ * Render the "Frontend Page URL" meta box.
+ *
+ * @param WP_Post $post The current page object.
+ */
+function mainframe_render_frontend_page_url_meta_box( WP_Post $post ): void {
+	wp_nonce_field( 'mainframe_save_frontend_page_url_' . $post->ID, 'mainframe_frontend_page_url_nonce' );
+
+	$saved        = (string) get_post_meta( $post->ID, '_mainframe_frontend_page_url', true );
+	$frontend_url = get_option( 'mainframe_frontend_url', '' );
+	$slug         = $post->post_name;
+
+	// Default to {frontend_url}/{slug} when no override has been saved yet.
+	$url = $saved;
+	if ( empty( $url ) && $frontend_url && $slug ) {
+		$url = trailingslashit( $frontend_url ) . $slug;
+	}
+	?>
+	<p style="margin-top:0;">
+		<label for="mainframe_frontend_page_url" style="display:block;margin-bottom:4px;font-weight:600;">
+			<?php esc_html_e( 'Page URL', 'mainframe' ); ?>
+		</label>
+		<input
+			type="url"
+			id="mainframe_frontend_page_url"
+			name="mainframe_frontend_page_url"
+			value="<?php echo esc_attr( $url ); ?>"
+			placeholder="<?php echo esc_attr( $frontend_url ? trailingslashit( $frontend_url ) . $slug : 'https://myapp.com/page-path' ); ?>"
+			style="width:100%;"
+		>
+		<span style="display:block;margin-top:4px;color:#757575;font-size:12px;">
+			<?php esc_html_e( 'The URL for this page on your frontend app. Edit if the path differs from the WordPress slug.', 'mainframe' ); ?>
+		</span>
+	</p>
+	<?php
+}
+
+add_action( 'save_post_page', 'mainframe_save_frontend_page_url_meta_box', 10, 2 );
+/**
+ * Save the frontend page URL meta value.
+ *
+ * @param int     $post_id Page ID being saved.
+ * @param WP_Post $post    Page object being saved.
+ */
+function mainframe_save_frontend_page_url_meta_box( int $post_id, WP_Post $post ): void {
+	$nonce = isset( $_POST['mainframe_frontend_page_url_nonce'] )
+		? sanitize_text_field( wp_unslash( $_POST['mainframe_frontend_page_url_nonce'] ) )
+		: '';
+
+	if ( ! wp_verify_nonce( $nonce, 'mainframe_save_frontend_page_url_' . $post_id ) ) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_page', $post_id ) ) {
+		return;
+	}
+
+	if ( ! isset( $_POST['mainframe_frontend_page_url'] ) ) {
+		return;
+	}
+
+	$url = esc_url_raw( wp_unslash( $_POST['mainframe_frontend_page_url'] ), [ 'http', 'https' ] );
+
+	if ( '' === $url ) {
+		delete_post_meta( $post_id, '_mainframe_frontend_page_url' );
+	} else {
+		update_post_meta( $post_id, '_mainframe_frontend_page_url', $url );
+	}
+}
+
+add_action( 'init', 'mainframe_register_frontend_page_url_meta' );
+/**
+ * Register the _mainframe_frontend_page_url meta so it is accessible
+ * via the REST API.
+ */
+function mainframe_register_frontend_page_url_meta(): void {
+	register_post_meta(
+		'page',
+		'_mainframe_frontend_page_url',
+		[
+			'show_in_rest'      => true,
+			'single'            => true,
+			'type'              => 'string',
+			'auth_callback'     => fn() => current_user_can( 'edit_pages' ),
+			'sanitize_callback' => function ( $value ) {
+				return esc_url_raw( (string) $value, [ 'http', 'https' ] );
+			},
+		]
+	);
+}

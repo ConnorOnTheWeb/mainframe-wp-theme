@@ -69,6 +69,17 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.12 =
+* Added RSS/Atom feed suppression: redirects all WordPress feed URLs to the home page. Available as an onboarding checkbox (checked by default) and as a toggle under Mainframe Settings → Admin.
+* Added XML sitemap suppression: disables the built-in /wp-sitemap.xml endpoint. Available as an onboarding checkbox (checked by default) and as a toggle under Mainframe Settings → Admin.
+* Added Frontend App URL settings (Mainframe Settings → Frontend App): configure the consuming frontend's root URL and an optional posts base path.
+* "View Post/Page" links, the post-publish panel, and the admin bar "Visit Site" link all now point to the configured frontend app URL. Link rewrites apply in both admin and REST API contexts so the block editor sees the correct URL.
+* Admin bar site-name node also rewritten to the frontend app URL.
+* Added "Frontend Page URL" meta box on published pages: pre-filled with {frontend_url}/{slug}, editable when the frontend path differs from the WordPress slug. Value exposed via REST API.
+* Block editor Preview button hidden on desktop (JS filter) and mobile (CSS targeting editor-header__post-preview-button). Preview is not useful on a headless install because unpublished content is not accessible to the frontend.
+* Pre-publish checks panel: hid the site card showing the WP backend name and URL (not relevant to the consuming frontend).
+* Post-publish panel: hid the raw WP backend address input; kept View Post/Add Post buttons (now link to frontend). Header title link restored and functional (also links to frontend).
+
 = 1.0.11 =
 * Added "Suppress automatic update notification emails" option. Available as an onboarding checkbox (unchecked by default) and as a toggle under Mainframe Settings → Admin. Disables the emails WordPress sends after automatic core, plugin, and theme updates.
 

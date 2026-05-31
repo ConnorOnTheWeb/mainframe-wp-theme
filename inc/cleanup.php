@@ -123,6 +123,65 @@ function mainframe_maybe_suppress_update_emails(): void {
 	add_filter( 'auto_theme_update_send_email',  '__return_false' );
 }
 
+// ---------------------------------------------------------------------------
+// RSS feed suppression (opt-in)
+// ---------------------------------------------------------------------------
+
+add_action( 'init', 'mainframe_maybe_suppress_feeds' );
+/**
+ * Redirect all RSS/Atom feed URLs to the home page when the admin has opted
+ * in to feed suppression. Off by default — some setups consume WP feeds
+ * directly or run newsletter tools that depend on them.
+ *
+ * Covers the global /feed/ endpoint and all per-post/archive variants.
+ */
+function mainframe_maybe_suppress_feeds(): void {
+	if ( ! get_option( 'mainframe_suppress_feeds', false ) ) {
+		return;
+	}
+	add_action( 'do_feed',          'mainframe_redirect_feed', 1 );
+	add_action( 'do_feed_rdf',      'mainframe_redirect_feed', 1 );
+	add_action( 'do_feed_rss',      'mainframe_redirect_feed', 1 );
+	add_action( 'do_feed_rss2',     'mainframe_redirect_feed', 1 );
+	add_action( 'do_feed_atom',     'mainframe_redirect_feed', 1 );
+	add_action( 'do_feed_rss2_comments', 'mainframe_redirect_feed', 1 );
+	add_action( 'do_feed_atom_comments', 'mainframe_redirect_feed', 1 );
+	// Also strip the auto-inserted <link rel="alternate"> tags from wp_head.
+	remove_action( 'wp_head', 'feed_links',       2 );
+	remove_action( 'wp_head', 'feed_links_extra',  3 );
+}
+
+/**
+ * Send visitors to the home page when a feed URL is requested.
+ *
+ * @internal Called from the do_feed_* action hooks.
+ */
+function mainframe_redirect_feed(): void {
+	wp_redirect( home_url( '/' ), 301 );
+	exit;
+}
+
+// ---------------------------------------------------------------------------
+// Sitemap suppression (opt-in)
+// ---------------------------------------------------------------------------
+
+add_filter( 'wp_sitemaps_enabled', 'mainframe_maybe_suppress_sitemap' );
+/**
+ * Disable the built-in WordPress sitemap when the admin has opted in.
+ *
+ * The consuming frontend should own /sitemap.xml. Leaving WP's version
+ * active risks duplicate indexing and confusion with search engines.
+ *
+ * @param bool $enabled Whether the sitemap is enabled.
+ * @return bool
+ */
+function mainframe_maybe_suppress_sitemap( bool $enabled ): bool {
+	if ( get_option( 'mainframe_suppress_sitemap', false ) ) {
+		return false;
+	}
+	return $enabled;
+}
+
 add_action( 'switch_theme', 'mainframe_cleanup_on_deactivation' );
 /**
  * Delete all Mainframe options when the user switches away from this theme.
@@ -145,10 +204,16 @@ function mainframe_cleanup_on_deactivation(): void {
 		'mainframe_onboarding_pending',
 		'mainframe_setup_complete',
 		'mainframe_suppress_update_emails',
+		'mainframe_suppress_feeds',
+		'mainframe_suppress_sitemap',
+		'mainframe_frontend_url',
+		'mainframe_frontend_posts_base',
+		'mainframe_block_manager_enabled',
 	];
 	foreach ( $options as $option ) {
 		delete_option( $option );
 	}
+	delete_option( 'mainframe_block_overrides' );
 	delete_transient( MAINFRAME_UPDATE_CACHE_KEY );
 }
 

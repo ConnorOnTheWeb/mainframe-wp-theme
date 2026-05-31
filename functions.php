@@ -18,6 +18,7 @@ require_once get_template_directory() . '/inc/cleanup.php';
 require_once get_template_directory() . '/inc/rest.php';
 require_once get_template_directory() . '/inc/redirects.php';
 require_once get_template_directory() . '/inc/meta.php';
+require_once get_template_directory() . '/inc/frontend-url.php';
 require_once get_template_directory() . '/inc/login.php';
 require_once get_template_directory() . '/inc/onboarding.php';
 require_once get_template_directory() . '/inc/rest-reference.php';

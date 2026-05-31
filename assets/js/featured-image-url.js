@@ -143,7 +143,7 @@
 	// Remove UI elements that link to the WordPress URL — irrelevant on a
 	// headless install where the WP frontend is not the consuming app.
 
-	// Preview button (top toolbar).
+	// Preview button (toolbar — desktop and mobile).
 	addFilter(
 		'editor.PostPreview',
 		'mainframe/disable-preview',
@@ -153,9 +153,9 @@
 		)
 	);
 
-	// The post-publish "What's next?" section (address, View Post, Add Post) is
-	// suppressed via CSS injected in inc/meta.php. The WP block editor does not
-	// expose a JS filter for this component — extensibility is Slot/Fill only.
+	// The post-publish "What's next?" section (address) is suppressed via CSS
+	// injected in inc/meta.php. The View Post / Add Post buttons are preserved
+	// and will link to the frontend app when a frontend URL is configured.
 
 	registerPlugin( 'mainframe-featured-image-url', {
 		render: FeaturedImageUrlPanel,

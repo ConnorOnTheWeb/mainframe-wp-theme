@@ -165,6 +165,46 @@ function mainframe_register_settings(): void {
 		]
 	);
 
+	register_setting(
+		'mainframe_settings_group',
+		'mainframe_suppress_feeds',
+		[
+			'type'              => 'boolean',
+			'default'           => false,
+			'sanitize_callback' => fn( $v ) => (bool) $v,
+		]
+	);
+
+	register_setting(
+		'mainframe_settings_group',
+		'mainframe_suppress_sitemap',
+		[
+			'type'              => 'boolean',
+			'default'           => false,
+			'sanitize_callback' => fn( $v ) => (bool) $v,
+		]
+	);
+
+	register_setting(
+		'mainframe_settings_group',
+		'mainframe_frontend_url',
+		[
+			'type'              => 'string',
+			'default'           => '',
+			'sanitize_callback' => 'mainframe_sanitize_frontend_url',
+		]
+	);
+
+	register_setting(
+		'mainframe_settings_group',
+		'mainframe_frontend_posts_base',
+		[
+			'type'              => 'string',
+			'default'           => '',
+			'sanitize_callback' => 'sanitize_text_field',
+		]
+	);
+
 	// ------------------------------------------------------------------
 	// Section: Public Frontend
 	// ------------------------------------------------------------------
@@ -198,6 +238,33 @@ function mainframe_register_settings(): void {
 		'mainframe_render_default_route_behavior_field',
 		'mainframe-settings',
 		'mainframe_section_frontend'
+	);
+
+	// ------------------------------------------------------------------
+	// Section: Frontend App
+	// ------------------------------------------------------------------
+
+	add_settings_section(
+		'mainframe_section_frontend_app',
+		__( 'Frontend App', 'mainframe' ),
+		'mainframe_render_frontend_app_section_intro',
+		'mainframe-settings'
+	);
+
+	add_settings_field(
+		'mainframe_frontend_url',
+		__( 'App URL', 'mainframe' ),
+		'mainframe_render_frontend_url_field',
+		'mainframe-settings',
+		'mainframe_section_frontend_app'
+	);
+
+	add_settings_field(
+		'mainframe_frontend_posts_base',
+		__( 'Posts Base Path', 'mainframe' ),
+		'mainframe_render_frontend_posts_base_field',
+		'mainframe-settings',
+		'mainframe_section_frontend_app'
 	);
 
 	// ------------------------------------------------------------------
@@ -277,6 +344,22 @@ function mainframe_register_settings(): void {
 		'mainframe_suppress_update_emails',
 		__( 'Update Emails', 'mainframe' ),
 		'mainframe_render_suppress_update_emails_field',
+		'mainframe-settings',
+		'mainframe_section_admin'
+	);
+
+	add_settings_field(
+		'mainframe_suppress_feeds',
+		__( 'RSS Feeds', 'mainframe' ),
+		'mainframe_render_suppress_feeds_field',
+		'mainframe-settings',
+		'mainframe_section_admin'
+	);
+
+	add_settings_field(
+		'mainframe_suppress_sitemap',
+		__( 'XML Sitemap', 'mainframe' ),
+		'mainframe_render_suppress_sitemap_field',
 		'mainframe-settings',
 		'mainframe_section_admin'
 	);
@@ -496,6 +579,107 @@ function mainframe_render_suppress_update_emails_field(): void {
 	<?php
 }
 
+/**
+ * Render the Suppress Feeds checkbox.
+ */
+function mainframe_render_suppress_feeds_field(): void {
+	$value = get_option( 'mainframe_suppress_feeds', false );
+	?>
+	<input type="hidden" name="mainframe_suppress_feeds" value="0">
+	<label>
+		<input type="checkbox"
+		       name="mainframe_suppress_feeds"
+		       value="1"
+		       <?php checked( (bool) $value ); ?>>
+		<?php esc_html_e( 'Disable RSS/Atom feeds', 'mainframe' ); ?>
+	</label>
+	<p class="description">
+		<?php esc_html_e( 'Redirects all feed URLs (/feed/, per-post feeds, etc.) to the home page. Your consuming frontend should handle feeds if needed.', 'mainframe' ); ?>
+	</p>
+	<?php
+}
+
+/**
+ * Render the Suppress Sitemap checkbox.
+ */
+function mainframe_render_suppress_sitemap_field(): void {
+	$value = get_option( 'mainframe_suppress_sitemap', false );
+	?>
+	<input type="hidden" name="mainframe_suppress_sitemap" value="0">
+	<label>
+		<input type="checkbox"
+		       name="mainframe_suppress_sitemap"
+		       value="1"
+		       <?php checked( (bool) $value ); ?>>
+		<?php esc_html_e( 'Disable the WordPress XML sitemap', 'mainframe' ); ?>
+	</label>
+	<p class="description">
+		<?php esc_html_e( 'Disables the built-in /wp-sitemap.xml. Your consuming frontend should generate and serve its own sitemap.', 'mainframe' ); ?>
+	</p>
+	<?php
+}
+
+/**
+ * Render the Frontend App section intro paragraph.
+ */
+function mainframe_render_frontend_app_section_intro(): void {
+	echo '<p>' . esc_html__(
+		'Configure the URL of your consuming frontend app. Used to rewrite the editor Preview button and the admin bar "Visit Site" link so they point to your frontend instead of the WordPress backend.',
+		'mainframe'
+	) . '</p>';
+}
+
+/**
+ * Render the Frontend App URL field.
+ */
+function mainframe_render_frontend_url_field(): void {
+	$value = get_option( 'mainframe_frontend_url', '' );
+	?>
+	<input
+		type="url"
+		id="mainframe_frontend_url"
+		name="mainframe_frontend_url"
+		value="<?php echo esc_attr( $value ); ?>"
+		class="regular-text"
+		placeholder="https://myapp.com"
+	>
+	<p class="description">
+		<?php esc_html_e( 'Root URL of your frontend app. Used as the base for "Visit Site" and page preview links.', 'mainframe' ); ?>
+	</p>
+	<?php
+}
+
+/**
+ * Render the Frontend Posts Base Path field.
+ */
+function mainframe_render_frontend_posts_base_field(): void {
+	$frontend_url = get_option( 'mainframe_frontend_url', '' );
+	$value        = get_option( 'mainframe_frontend_posts_base', '' );
+	?>
+	<input
+		type="text"
+		id="mainframe_frontend_posts_base"
+		name="mainframe_frontend_posts_base"
+		value="<?php echo esc_attr( $value ); ?>"
+		class="regular-text"
+		placeholder="blog"
+	>
+	<p class="description">
+		<?php
+		if ( $frontend_url && $value ) {
+			printf(
+				/* translators: %s: example post preview URL */
+				esc_html__( 'Posts will preview at %s.', 'mainframe' ),
+				'<code>' . esc_html( trailingslashit( $frontend_url ) . trailingslashit( $value ) . '{slug}' ) . '</code>'
+			);
+		} else {
+			esc_html_e( 'Path segment appended to the App URL to form post preview links, e.g. "blog" gives https://myapp.com/blog/{slug}. Leave blank if posts live at the root.', 'mainframe' );
+		}
+		?>
+	</p>
+	<?php
+}
+
 // ---------------------------------------------------------------------------
 // Sanitization callbacks
 // ---------------------------------------------------------------------------
@@ -641,6 +825,31 @@ function mainframe_sanitize_deploy_hook_url( $value ): string {
 		return get_option( 'mainframe_deploy_hook_url', '' );
 	}
 	return $url;
+}
+
+/**
+ * Sanitize the frontend app URL.
+ *
+ * Accepts an empty string or a valid absolute http/https URL.
+ *
+ * @param mixed $value Raw input value.
+ * @return string Sanitized URL, or empty string.
+ */
+function mainframe_sanitize_frontend_url( $value ): string {
+	$value = trim( (string) $value );
+	if ( empty( $value ) ) {
+		return '';
+	}
+	$url = esc_url_raw( $value, [ 'http', 'https' ] );
+	if ( empty( $url ) ) {
+		add_settings_error(
+			'mainframe_frontend_url',
+			'mainframe_frontend_url_invalid',
+			__( 'Frontend app URL must be a valid http or https URL. The value was not saved.', 'mainframe' )
+		);
+		return get_option( 'mainframe_frontend_url', '' );
+	}
+	return untrailingslashit( $url );
 }
 
 /**

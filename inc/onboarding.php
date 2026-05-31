@@ -254,6 +254,34 @@ function mainframe_render_setup_card(): void {
 
 					<tr>
 						<td style="width:24px;vertical-align:top;padding:6px 0;">
+							<input type="checkbox" name="mf_suppress_feeds" id="mf_suppress_feeds" value="1" checked>
+						</td>
+						<td style="padding:4px 0 12px 10px;">
+							<label for="mf_suppress_feeds" style="font-weight:600;display:block;">
+								<?php esc_html_e( 'Disable RSS/Atom feeds', 'mainframe' ); ?>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'Redirects WordPress feed URLs to the home page. In a headless setup the consuming frontend should own its own feed — the WP feed is never reached by readers.', 'mainframe' ); ?>
+							</p>
+						</td>
+					</tr>
+
+					<tr>
+						<td style="width:24px;vertical-align:top;padding:6px 0;">
+							<input type="checkbox" name="mf_suppress_sitemap" id="mf_suppress_sitemap" value="1" checked>
+						</td>
+						<td style="padding:4px 0 12px 10px;">
+							<label for="mf_suppress_sitemap" style="font-weight:600;display:block;">
+								<?php esc_html_e( 'Disable the WordPress XML sitemap', 'mainframe' ); ?>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'Disables the built-in /wp-sitemap.xml endpoint. In a headless setup the frontend app should generate and own the sitemap.', 'mainframe' ); ?>
+							</p>
+						</td>
+					</tr>
+
+					<tr>
+						<td style="width:24px;vertical-align:top;padding:6px 0;">
 							<input type="checkbox" name="mf_block_manager" id="mf_block_manager" value="1" checked>
 						</td>
 						<td style="padding:4px 0 12px 10px;">
@@ -347,6 +375,16 @@ function mainframe_handle_apply_headless(): void {
 	// Suppress automatic update notification emails.
 	if ( ! empty( $_POST['mf_suppress_update_emails'] ) ) {
 		update_option( 'mainframe_suppress_update_emails', true );
+	}
+
+	// Suppress RSS/Atom feeds.
+	if ( ! empty( $_POST['mf_suppress_feeds'] ) ) {
+		update_option( 'mainframe_suppress_feeds', true );
+	}
+
+	// Suppress XML sitemap.
+	if ( ! empty( $_POST['mf_suppress_sitemap'] ) ) {
+		update_option( 'mainframe_suppress_sitemap', true );
 	}
 
 	// Block Manager — hide JS-dependent blocks from the inserter.
