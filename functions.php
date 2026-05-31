@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 // Load order matters: options must be available before redirects or login
 // customization run, and cleanup/REST filters should register early.
 require_once get_template_directory() . '/inc/options.php';
+require_once get_template_directory() . '/inc/block-manager.php';
 require_once get_template_directory() . '/inc/cleanup.php';
 require_once get_template_directory() . '/inc/rest.php';
 require_once get_template_directory() . '/inc/redirects.php';

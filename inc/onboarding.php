@@ -240,6 +240,20 @@ function mainframe_render_setup_card(): void {
 
 					<tr>
 						<td style="width:24px;vertical-align:top;padding:6px 0;">
+							<input type="checkbox" name="mf_block_manager" id="mf_block_manager" value="1" checked>
+						</td>
+						<td style="padding:4px 0 12px 10px;">
+							<label for="mf_block_manager" style="font-weight:600;display:block;">
+								<?php esc_html_e( 'Hide JS-dependent blocks from the editor', 'mainframe' ); ?>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'Removes blocks that require front-end JavaScript (Navigation, Search, Query pagination, etc.) from the block inserter. In a headless setup those scripts never run on your consumer site. Existing content is unaffected — blocks are only hidden from the inserter. Can be fine-tuned per-block in Mainframe Settings.', 'mainframe' ); ?>
+							</p>
+						</td>
+					</tr>
+
+					<tr>
+						<td style="width:24px;vertical-align:top;padding:6px 0;">
 							<input type="checkbox" name="mf_login_slug_enable" id="mf_login_slug_enable" value="1">
 						</td>
 						<td style="padding:4px 0 12px 10px;">
@@ -314,6 +328,13 @@ function mainframe_handle_apply_headless(): void {
 	// Flat upload folder structure.
 	if ( ! empty( $_POST['mf_uploads'] ) ) {
 		mainframe_apply_upload_defaults();
+	}
+
+	// Block Manager — hide JS-dependent blocks from the inserter.
+	// The block manager is on by default; only write to the DB when the admin
+	// explicitly opts out during onboarding.
+	if ( empty( $_POST['mf_block_manager'] ) ) {
+		update_option( 'mainframe_block_manager_enabled', false );
 	}
 
 	// Custom login slug.

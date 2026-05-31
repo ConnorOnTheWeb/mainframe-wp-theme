@@ -69,6 +69,9 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.9 =
+* Added Block Manager settings section. Auto-detects blocks that require front-end JavaScript (via viewScript / viewScriptModule) and disables them in the editor inserter by default. Each block can be individually toggled. Fully non-destructive — existing post content is never modified.
+
 = 1.0.8 =
 * Moved "REST API Reference" and "Check for Updates" buttons below the settings page title.
 
