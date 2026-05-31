@@ -69,6 +69,9 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.10 =
+* JS-Dependent Blocks section is now a collapsed <details>/<summary> dropdown, matching the Standard Blocks section. Both sections start collapsed, and the quick-action buttons still work on their contents regardless of open/closed state.
+
 = 1.0.9 =
 * Added Block Manager settings section. Auto-detects blocks that require front-end JavaScript (via viewScript / viewScriptModule) and disables them in the editor inserter by default. Each block can be individually toggled. Fully non-destructive — existing post content is never modified.
 

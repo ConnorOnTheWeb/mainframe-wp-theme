@@ -353,41 +353,43 @@ function mainframe_render_block_overrides_field(): void {
 		</p>
 
 		<?php if ( ! empty( $js_blocks ) ) : ?>
-			<h4 style="margin:0 0 .4em">
-				<?php printf(
-					/* translators: %d: number of auto-detected JS-dependent blocks */
-					esc_html__( 'JS-Dependent Blocks (%d auto-detected)', 'mainframe' ),
-					count( $js_blocks )
-				); ?>
-			</h4>
-			<p class="description" style="margin-bottom:.6em">
-				<?php esc_html_e( 'Checked = shown in editor. Hidden by default in headless setups.', 'mainframe' ); ?>
-			</p>
-			<table class="widefat striped" style="margin-bottom:1.5em">
-				<tbody>
-				<?php foreach ( $js_blocks as $name => $block_type ) :
-					$label    = $block_type->title ?? $name;
-					$is_shown = mainframe_block_is_shown( $name, $overrides, $js_names );
-					?>
-					<tr>
-						<td style="width:2.5em;vertical-align:middle">
-							<input type="hidden"
-							       name="<?php echo esc_attr( $opt ); ?>[<?php echo esc_attr( $name ); ?>]"
-							       value="0">
-							<input type="checkbox"
-							       class="mf-block-cb mf-js-block"
-							       name="<?php echo esc_attr( $opt ); ?>[<?php echo esc_attr( $name ); ?>]"
-							       value="1"
-							       <?php checked( $is_shown ); ?>>
-						</td>
-						<td>
-							<strong><?php echo esc_html( $label ); ?></strong><br>
-							<code style="font-size:.8em"><?php echo esc_html( $name ); ?></code>
-						</td>
-					</tr>
-				<?php endforeach; ?>
-				</tbody>
-			</table>
+			<details>
+				<summary style="cursor:pointer;font-weight:600;padding:.35em 0;user-select:none">
+					<?php printf(
+						/* translators: %d: number of auto-detected JS-dependent blocks */
+						esc_html__( 'JS-Dependent Blocks (%d auto-detected)', 'mainframe' ),
+						count( $js_blocks )
+					); ?>
+				</summary>
+				<p class="description" style="margin:.5em 0 .6em">
+					<?php esc_html_e( 'Checked = shown in editor. Hidden by default in headless setups.', 'mainframe' ); ?>
+				</p>
+				<table class="widefat striped" style="margin-bottom:1.5em">
+					<tbody>
+					<?php foreach ( $js_blocks as $name => $block_type ) :
+						$label    = $block_type->title ?? $name;
+						$is_shown = mainframe_block_is_shown( $name, $overrides, $js_names );
+						?>
+						<tr>
+							<td style="width:2.5em;vertical-align:middle">
+								<input type="hidden"
+								       name="<?php echo esc_attr( $opt ); ?>[<?php echo esc_attr( $name ); ?>]"
+								       value="0">
+								<input type="checkbox"
+								       class="mf-block-cb mf-js-block"
+								       name="<?php echo esc_attr( $opt ); ?>[<?php echo esc_attr( $name ); ?>]"
+								       value="1"
+								       <?php checked( $is_shown ); ?>>
+							</td>
+							<td>
+								<strong><?php echo esc_html( $label ); ?></strong><br>
+								<code style="font-size:.8em"><?php echo esc_html( $name ); ?></code>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			</details>
 		<?php else : ?>
 			<p class="description"><?php esc_html_e( 'No JS-dependent blocks detected.', 'mainframe' ); ?></p>
 		<?php endif; ?>
