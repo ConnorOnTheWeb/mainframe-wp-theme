@@ -142,6 +142,48 @@ function mainframe_rewrite_admin_bar_site_url( WP_Admin_Bar $wp_admin_bar ): voi
 }
 
 // ---------------------------------------------------------------------------
+// Permalink template rewriting (block editor "View Post", permalink panel)
+// ---------------------------------------------------------------------------
+
+add_filter( 'get_sample_permalink', 'mainframe_rewrite_sample_permalink', 10, 5 );
+/**
+ * Rewrite the permalink template so the block editor's "View Post" button,
+ * permalink panel, and post-publish panel all show the frontend app URL.
+ *
+ * Gutenberg builds URLs client-side from the `permalink_template` REST field
+ * (produced by get_sample_permalink). Our post_link/page_link filters only
+ * affect the `link` field — a different path — so without this filter the
+ * editor shows the WordPress backend domain everywhere the template is used.
+ *
+ * get_sample_permalink() is only called in admin/REST contexts, so no extra
+ * context guard is required here.
+ *
+ * @param array       $permalink [$template, $slug] from get_sample_permalink().
+ * @param int         $post_id   Post ID.
+ * @param string|null $title     Post title (unused).
+ * @param string|null $name      Post slug (unused).
+ * @param WP_Post     $post      Post object.
+ * @return array Modified [$template, $slug].
+ */
+function mainframe_rewrite_sample_permalink( array $permalink, int $post_id, ?string $title, ?string $name, WP_Post $post ): array {
+	$frontend_url = get_option( 'mainframe_frontend_url', '' );
+	if ( empty( $frontend_url ) ) {
+		return $permalink;
+	}
+
+	if ( 'page' === $post->post_type ) {
+		$permalink[0] = trailingslashit( $frontend_url ) . '%pagename%';
+	} else {
+		$base         = sanitize_text_field( get_option( 'mainframe_frontend_posts_base', '' ) );
+		$permalink[0] = $base
+			? trailingslashit( $frontend_url ) . trailingslashit( $base ) . '%postname%'
+			: trailingslashit( $frontend_url ) . '%postname%';
+	}
+
+	return $permalink;
+}
+
+// ---------------------------------------------------------------------------
 // URL construction helper
 // ---------------------------------------------------------------------------
 
