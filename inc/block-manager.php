@@ -102,6 +102,12 @@ function mainframe_block_has_frontend_js( WP_Block_Type $block_type ): bool {
 /**
  * Return all registered block types that require front-end JavaScript.
  *
+ * Two-phase detection:
+ *   1. Script-based + curated list — direct JS detection via mainframe_block_has_frontend_js().
+ *   2. Parent propagation — a block whose declared parent(s) are all JS-dependent is itself
+ *      JS-dependent (e.g. accordion sub-blocks). Loops until no new blocks are added so
+ *      arbitrary nesting depth is handled.
+ *
  * Result is memoized for the current request.
  *
  * @return WP_Block_Type[] Keyed by block name, sorted alphabetically.
@@ -113,13 +119,30 @@ function mainframe_get_js_dependent_blocks(): array {
 	}
 
 	$registry  = WP_Block_Type_Registry::get_instance();
+	$all       = $registry->get_all_registered();
 	$js_blocks = [];
 
-	foreach ( $registry->get_all_registered() as $name => $block_type ) {
+	// Phase 1: script-based detection + curated list.
+	foreach ( $all as $name => $block_type ) {
 		if ( mainframe_block_has_frontend_js( $block_type ) ) {
 			$js_blocks[ $name ] = $block_type;
 		}
 	}
+
+	// Phase 2: propagate to child blocks whose every declared parent is JS-dependent.
+	do {
+		$added    = 0;
+		$js_names = array_keys( $js_blocks );
+		foreach ( $all as $name => $block_type ) {
+			if ( isset( $js_blocks[ $name ] ) ) {
+				continue;
+			}
+			if ( ! empty( $block_type->parent ) && ! array_diff( $block_type->parent, $js_names ) ) {
+				$js_blocks[ $name ] = $block_type;
+				$added++;
+			}
+		}
+	} while ( $added > 0 );
 
 	ksort( $js_blocks );
 	$cache = $js_blocks;
