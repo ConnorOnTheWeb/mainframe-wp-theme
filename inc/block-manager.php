@@ -59,9 +59,6 @@ function mainframe_known_js_blocks(): array {
 		// Search — enhanced search interactions (autocomplete, live results).
 		'core/search',
 
-		// Image — lightbox is on by default and requires JS.
-		'core/image',
-
 		// Comments form — reply/threading interactions.
 		'core/post-comments-form',
 		'core/comments',
