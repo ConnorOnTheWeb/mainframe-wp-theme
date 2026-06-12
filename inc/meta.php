@@ -231,21 +231,20 @@ function mainframe_register_featured_image_url_meta(): void {
 		]
 	);
 
-	// Register FIFU's meta key as read-only when the FIFU plugin is not active.
-	// This makes the value visible to the block editor so the Featured Image
-	// panel can fall back to it for existing posts migrating away from FIFU.
+	// Register FIFU's meta key when the FIFU plugin is not active.
+	// Writable so editors can clear leftover migration data from the block editor.
 	if ( ! function_exists( 'fifu_dev_set_image' ) ) {
 		register_post_meta(
 			'',
 			'fifu_image_url',
 			[
 				'type'              => 'string',
-				'description'       => 'FIFU plugin featured image URL (migration compatibility, read-only).',
+				'description'       => 'FIFU plugin featured image URL (migration compatibility).',
 				'single'            => true,
 				'default'           => '',
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'esc_url_raw',
-				'auth_callback'     => '__return_false', // Read-only — never writable via REST.
+				'auth_callback'     => 'mainframe_route_meta_auth_callback',
 			]
 		);
 	}

@@ -90,16 +90,18 @@
 							? __( 'Featured Image URL is set', 'mainframe' )
 							: __( 'Inherited from FIFU', 'mainframe' )
 						),
-						mainframeUrl
-							? el( Button, {
-								variant:       'link',
-								isDestructive: true,
-								style:         { fontSize: '12px', flexShrink: 0 },
-								onClick: function () {
+						el( Button, {
+							variant:       'link',
+							isDestructive: true,
+							style:         { fontSize: '12px', flexShrink: 0 },
+							onClick: function () {
+								if ( mainframeUrl ) {
 									editPost( { meta: { _mainframe_featured_image_url: '' } } );
-								},
-							}, __( 'Remove', 'mainframe' ) )
-							: null
+								} else {
+									editPost( { meta: { fifu_image_url: '' } } );
+								}
+							},
+						}, __( 'Remove', 'mainframe' ) )
 					)
 				);
 			};
