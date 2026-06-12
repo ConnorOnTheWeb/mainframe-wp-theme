@@ -69,6 +69,9 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.19 =
+* Replaced the Custom HTML block's modal code editor (HTML/CSS/JS tabs) with an inline textarea and Preview toggle. The editing surface is now always visible without opening a lightbox. HTML mode shows a plain monospace textarea; Preview mode renders the HTML inline using the browser's parser (script tags are not executed in preview — they work normally in published content).
+
 = 1.0.18 =
 * Fixed "Remove" button in the Featured Image panel not working when the image came from legacy FIFU plugin meta (`fifu_image_url`). The button now correctly clears `fifu_image_url` when that is the active source, and `_mainframe_featured_image_url` when that is the source. Requires FIFU plugin to be inactive (migration scenario).
 * `fifu_image_url` is now writable via REST when the FIFU plugin is not active, so the block editor can clear leftover migration data.

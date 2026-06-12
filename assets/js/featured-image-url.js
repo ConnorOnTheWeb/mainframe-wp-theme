@@ -17,7 +17,7 @@
 	if (
 		! wp ||
 		! wp.plugins || ! wp.editPost || ! wp.data ||
-		! wp.components || ! wp.element ||
+		! wp.components || ! wp.element || ! wp.element.useState ||
 		! wp.hooks || ! wp.compose
 	) {
 		return;
@@ -34,6 +34,8 @@
 	var Button                     = wp.components.Button;
 	var addFilter                  = wp.hooks.addFilter;
 	var createHigherOrderComponent = wp.compose.createHigherOrderComponent;
+	var useState                   = wp.element.useState;
+	var useEffect                  = wp.element.useEffect;
 
 	// -----------------------------------------------------------------------
 	// Override the native PostFeaturedImage component when a custom URL is set
@@ -162,6 +164,86 @@
 			function () { return function () { return null; }; },
 			'MainframeDisablePreview'
 		)
+	);
+
+	// -----------------------------------------------------------------------
+	// Override core/html edit UI — inline textarea + preview toggle
+	// -----------------------------------------------------------------------
+	addFilter(
+		'editor.BlockEdit',
+		'mainframe/html-block-editor',
+		createHigherOrderComponent( function ( BlockEdit ) {
+
+			function MainframeHtmlEdit( props ) {
+				var modeState = useState( 'edit' );
+				var mode      = modeState[ 0 ];
+				var setMode   = modeState[ 1 ];
+
+				useEffect( function () {
+					if ( ! props.isSelected ) {
+						setMode( 'edit' );
+					}
+				}, [ props.isSelected ] );
+
+				var content = props.attributes.content || '';
+
+				return el( 'div', null,
+					el( 'div', {
+						style: { display: 'flex', gap: '1px', marginBottom: '6px' },
+					},
+						el( Button, {
+							variant:   'tertiary',
+							isPressed: mode === 'edit',
+							onClick:   function () { setMode( 'edit' ); },
+						}, __( 'HTML', 'mainframe' ) ),
+						el( Button, {
+							variant:   'tertiary',
+							isPressed: mode === 'preview',
+							onClick:   function () { setMode( 'preview' ); },
+						}, __( 'Preview', 'mainframe' ) )
+					),
+					mode === 'edit'
+						? el( 'textarea', {
+							value:        content,
+							onChange:     function ( e ) {
+								props.setAttributes( { content: e.target.value } );
+							},
+							spellCheck:   false,
+							autoComplete: 'off',
+							style: {
+								display:      'block',
+								width:        '100%',
+								minHeight:    '120px',
+								fontFamily:   'monospace',
+								fontSize:     '13px',
+								lineHeight:   '1.5',
+								padding:      '8px',
+								boxSizing:    'border-box',
+								border:       '1px solid #ddd',
+								borderRadius: '2px',
+								resize:       'vertical',
+							},
+						} )
+						: el( 'div', {
+							style: {
+								minHeight:    '40px',
+								padding:      '8px',
+								border:       '1px solid #ddd',
+								borderRadius: '2px',
+								background:   '#fff',
+							},
+							dangerouslySetInnerHTML: { __html: content },
+						} )
+				);
+			}
+
+			return function ( props ) {
+				if ( props.name !== 'core/html' ) {
+					return el( BlockEdit, props );
+				}
+				return el( MainframeHtmlEdit, props );
+			};
+		}, 'MainframeHtmlBlockEditor' )
 	);
 
 	// The post-publish "What's next?" section (address) is suppressed via CSS
