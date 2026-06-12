@@ -49,11 +49,15 @@
 
 				var editPost = useDispatch( 'core/editor' ).editPost;
 
-				var customUrl = ( meta && meta._mainframe_featured_image_url )
+				var mainframeUrl = ( meta && meta._mainframe_featured_image_url )
 					? meta._mainframe_featured_image_url
-					: ( meta && meta.fifu_image_url )
-						? meta.fifu_image_url
-						: '';
+					: '';
+
+				var fifuUrl = ( ! mainframeUrl && meta && meta.fifu_image_url )
+					? meta.fifu_image_url
+					: '';
+
+				var customUrl = mainframeUrl || fifuUrl;
 
 				// No custom URL — render the native featured image UI unchanged.
 				if ( ! customUrl ) {
@@ -82,15 +86,20 @@
 					},
 						el( 'span', {
 							style: { fontSize: '12px', color: '#757575', flex: '1' },
-						}, __( 'Featured Image URL is set', 'mainframe' ) ),
-						el( Button, {
-							variant:       'link',
-							isDestructive: true,
-							style:         { fontSize: '12px', flexShrink: 0 },
-							onClick: function () {
-								editPost( { meta: { _mainframe_featured_image_url: '' } } );
-							},
-						}, __( 'Remove', 'mainframe' ) )
+						}, mainframeUrl
+							? __( 'Featured Image URL is set', 'mainframe' )
+							: __( 'Inherited from FIFU', 'mainframe' )
+						),
+						mainframeUrl
+							? el( Button, {
+								variant:       'link',
+								isDestructive: true,
+								style:         { fontSize: '12px', flexShrink: 0 },
+								onClick: function () {
+									editPost( { meta: { _mainframe_featured_image_url: '' } } );
+								},
+							}, __( 'Remove', 'mainframe' ) )
+							: null
 					)
 				);
 			};
