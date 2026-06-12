@@ -69,6 +69,20 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.18 =
+* Fixed "Remove" button in the Featured Image panel not working when the image came from legacy FIFU plugin meta (`fifu_image_url`). The button now correctly clears `fifu_image_url` when that is the active source, and `_mainframe_featured_image_url` when that is the source. Requires FIFU plugin to be inactive (migration scenario).
+* `fifu_image_url` is now writable via REST when the FIFU plugin is not active, so the block editor can clear leftover migration data.
+
+= 1.0.17 =
+* Block editor Featured Image panel now distinguishes between a manually-set Featured Image URL (`_mainframe_featured_image_url`) and one inherited from the legacy FIFU plugin (`fifu_image_url`). The status label reflects the source ("Featured Image URL is set" vs "Inherited from FIFU").
+
+= 1.0.16 =
+* Removed `core/image` from the JS-dependent block list. The block's lightbox feature requires JS but the block itself renders without it; images should not be hidden from the inserter on a headless install.
+* Block Manager now propagates JS-dependency to child blocks: if a block declares `parent` and every named parent is JS-dependent, the child is automatically classified as JS-dependent too. Handles arbitrary nesting depth (e.g. accordion sub-blocks). Previously, child blocks of JS-dependent blocks appeared in the inserter even though they were unusable without their parent.
+
+= 1.0.13 =
+* Fixed block editor "View Post / View Page" button showing the WordPress backend URL instead of the configured frontend app URL. Added a `get_sample_permalink` filter that rewrites the permalink template Gutenberg builds its editor links from, covering the toolbar View button, the permalink panel, and the post-publish panel.
+
 = 1.0.12 =
 * Added RSS/Atom feed suppression: redirects all WordPress feed URLs to the home page. Available as an onboarding checkbox (checked by default) and as a toggle under Mainframe Settings → Admin.
 * Added XML sitemap suppression: disables the built-in /wp-sitemap.xml endpoint. Available as an onboarding checkbox (checked by default) and as a toggle under Mainframe Settings → Admin.
