@@ -69,6 +69,9 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.20 =
+* Fixed media library "View" links pointing to a broken frontend URL instead of the actual file. WordPress builds attachment page URLs by appending the attachment slug to the parent post's permalink; because post link filters run in admin contexts, the parent permalink was being rewritten to the frontend domain, cascading into a non-existent URL. A new `attachment_link` filter now returns the direct file URL instead, which is the correct behaviour for a headless install where attachment pages do not exist on the frontend.
+
 = 1.0.19 =
 * Replaced the Custom HTML block's modal code editor (HTML/CSS/JS tabs) with an inline textarea and Preview toggle. The editing surface is now always visible without opening a lightbox. HTML mode shows a plain monospace textarea; Preview mode renders the HTML inline using the browser's parser (script tags are not executed in preview — they work normally in published content).
 

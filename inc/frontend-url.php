@@ -46,6 +46,7 @@ function mainframe_rewrite_preview_link( string $preview_link, WP_Post $post ): 
 add_filter( 'post_link',      'mainframe_rewrite_post_link', 10, 2 );
 add_filter( 'page_link',      'mainframe_rewrite_page_link', 10, 2 );
 add_filter( 'post_type_link', 'mainframe_rewrite_post_type_link', 10, 2 );
+add_filter( 'attachment_link', 'mainframe_rewrite_attachment_link', 10, 2 );
 
 /**
  * True when the current request is an admin or REST API context.
@@ -91,6 +92,29 @@ function mainframe_rewrite_page_link( string $permalink, int $post_id ): string 
 		return $permalink;
 	}
 	return mainframe_build_frontend_url( $post, $frontend_url );
+}
+
+/**
+ * Rewrite the media library "View" link to the direct file URL.
+ *
+ * WordPress builds attachment page URLs by appending the attachment slug to
+ * the parent post's permalink. Since post_link runs in admin contexts, the
+ * parent permalink gets rewritten to the frontend domain — producing a broken
+ * URL like {frontend}/{parent-slug}/{attachment-slug}/ that doesn't exist.
+ * Returning the direct file URL sidesteps this cascade; attachment pages
+ * don't exist on a headless frontend anyway.
+ *
+ * @param string $link    The default attachment page URL.
+ * @param int    $post_id The attachment post ID.
+ * @return string Direct file URL, or the original link if unconfigured.
+ */
+function mainframe_rewrite_attachment_link( string $link, int $post_id ): string {
+	$frontend_url = get_option( 'mainframe_frontend_url', '' );
+	if ( empty( $frontend_url ) || ! mainframe_is_editorial_context() ) {
+		return $link;
+	}
+	$file_url = wp_get_attachment_url( $post_id );
+	return $file_url ?: $link;
 }
 
 /**
