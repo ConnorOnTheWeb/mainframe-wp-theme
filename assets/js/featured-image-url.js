@@ -175,9 +175,13 @@
 		createHigherOrderComponent( function ( BlockEdit ) {
 
 			function MainframeHtmlEdit( props ) {
-				var modeState = useState( 'edit' );
-				var mode      = modeState[ 0 ];
-				var setMode   = modeState[ 1 ];
+				var modeState    = useState( 'edit' );
+				var mode         = modeState[ 0 ];
+				var setMode      = modeState[ 1 ];
+
+				var contentState    = useState( props.attributes.content || '' );
+				var localContent    = contentState[ 0 ];
+				var setLocalContent = contentState[ 1 ];
 
 				useEffect( function () {
 					if ( ! props.isSelected ) {
@@ -185,7 +189,10 @@
 					}
 				}, [ props.isSelected ] );
 
-				var content = props.attributes.content || '';
+				// Sync from block store on undo/redo or external changes.
+				useEffect( function () {
+					setLocalContent( props.attributes.content || '' );
+				}, [ props.attributes.content ] );
 
 				return el( 'div', null,
 					el( 'div', {
@@ -204,9 +211,11 @@
 					),
 					mode === 'edit'
 						? el( 'textarea', {
-							value:        content,
+							value:        localContent,
 							onChange:     function ( e ) {
-								props.setAttributes( { content: e.target.value } );
+								var val = e.target.value;
+								setLocalContent( val );
+								props.setAttributes( { content: val } );
 							},
 							spellCheck:   false,
 							autoComplete: 'off',
@@ -232,7 +241,7 @@
 								borderRadius: '2px',
 								background:   '#fff',
 							},
-							dangerouslySetInnerHTML: { __html: content },
+							dangerouslySetInnerHTML: { __html: localContent },
 						} )
 				);
 			}

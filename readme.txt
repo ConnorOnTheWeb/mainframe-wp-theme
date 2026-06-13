@@ -69,6 +69,9 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.21 =
+* Fixed cursor jumping to end of text when editing inside the Custom HTML block textarea. Cause was the block editor's Redux store propagating attribute updates back as new props, causing React to reset the textarea cursor on each keystroke. The textarea value is now buffered in local component state; undo/redo sync from the block store is handled separately via a effect.
+
 = 1.0.20 =
 * Fixed media library "View" links pointing to a broken frontend URL instead of the actual file. WordPress builds attachment page URLs by appending the attachment slug to the parent post's permalink; because post link filters run in admin contexts, the parent permalink was being rewritten to the frontend domain, cascading into a non-existent URL. A new `attachment_link` filter now returns the direct file URL instead, which is the correct behaviour for a headless install where attachment pages do not exist on the frontend.
 
