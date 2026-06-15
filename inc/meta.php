@@ -369,7 +369,7 @@ function mainframe_enqueue_featured_image_url_editor_script(): void {
 	wp_enqueue_script(
 		'mainframe-featured-image-url',
 		get_template_directory_uri() . '/assets/js/featured-image-url.js',
-		[ 'wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-i18n', 'wp-hooks', 'wp-compose' ],
+		[ 'wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-i18n', 'wp-hooks', 'wp-compose', 'wp-wordcount' ],
 		filemtime( get_template_directory() . '/assets/js/featured-image-url.js' ),
 		true
 	);
@@ -381,6 +381,16 @@ function mainframe_enqueue_featured_image_url_editor_script(): void {
 	wp_add_inline_script(
 		'mainframe-featured-image-url',
 		'wp.domReady( function () { wp.data.dispatch( "core/edit-post" ).removeEditorPanel( "discussion-panel" ); } );'
+	);
+
+	// Patch wp.wordcount.count() to exclude Custom HTML blocks (core/html) before
+	// counting words. The block editor's built-in word-count/reading-time display
+	// runs this function on raw block markup, which includes script tags, JSON-LD,
+	// iframes, etc. pasted into HTML blocks — inflating the word and minute counts.
+	wp_add_inline_script(
+		'mainframe-featured-image-url',
+		'(function(){if(!wp.wordcount)return;var _c=wp.wordcount.count;wp.wordcount.count=function(t,y,s){if(typeof t==="string")t=t.replace(/<!--\s*wp:html[^>]*-->[\s\S]*?<!--\s*\/wp:html\s*-->/g,"");return _c(t,y,s);};})();',
+		'before'
 	);
 
 	// Hide WP-domain URLs and navigation from the block editor. The WordPress
