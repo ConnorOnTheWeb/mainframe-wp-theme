@@ -554,15 +554,20 @@ function mainframe_register_reading_time_field(): void {
 		'reading_time',
 		[
 			'get_callback' => static function ( array $post ): int {
-				$content = $post['content']['rendered'] ?? '';
-				if ( '' === $content ) {
-					$post_id = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
-					$content = $post_id ? (string) get_post_field( 'post_content', $post_id ) : '';
-				}
-				if ( '' === $content ) {
+				$post_id = (int) ( $post['id'] ?? $post['ID'] ?? 0 );
+				$raw     = $post_id ? (string) get_post_field( 'post_content', $post_id ) : '';
+				if ( '' === $raw ) {
 					return 0;
 				}
-				$words = str_word_count( wp_strip_all_tags( $content ) );
+				$text = '';
+				foreach ( parse_blocks( $raw ) as $block ) {
+					// Skip custom HTML blocks — they contain scripts, iframes, JSON-LD, etc.
+					if ( 'core/html' === $block['blockName'] ) {
+						continue;
+					}
+					$text .= ' ' . render_block( $block );
+				}
+				$words = str_word_count( wp_strip_all_tags( $text ) );
 				return (int) max( 1, ceil( $words / 200 ) );
 			},
 			'schema' => [

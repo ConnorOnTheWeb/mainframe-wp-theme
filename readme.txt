@@ -69,6 +69,9 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
+= 1.0.22 =
+* Fixed `reading_time` REST field incorrectly counting content inside Custom HTML blocks (e.g. JSON-LD `<script>` blocks) as readable words. The field now uses `parse_blocks()` on the raw post content and skips `core/html` blocks entirely before counting words.
+
 = 1.0.21 =
 * Fixed cursor jumping to end of text when editing inside the Custom HTML block textarea. Cause was the block editor's Redux store propagating attribute updates back as new props, causing React to reset the textarea cursor on each keystroke. The textarea value is now buffered in local component state; undo/redo sync from the block store is handled separately via a effect.
 
