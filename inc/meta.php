@@ -383,14 +383,17 @@ function mainframe_enqueue_featured_image_url_editor_script(): void {
 		'wp.domReady( function () { wp.data.dispatch( "core/edit-post" ).removeEditorPanel( "discussion-panel" ); } );'
 	);
 
-	// Patch wp.wordcount.count() to exclude Custom HTML blocks (core/html) before
-	// counting words. The block editor's built-in word-count/reading-time display
-	// runs this function on raw block markup, which includes script tags, JSON-LD,
-	// iframes, etc. pasted into HTML blocks — inflating the word and minute counts.
+	// Replace wp.wordcount with a wrapper that strips Custom HTML blocks (core/html)
+	// before counting. wp.wordcount.count is exposed via a non-configurable getter
+	// (Object.defineProperty, no setter), so direct assignment silently fails.
+	// Replacing the whole object works because editor.js reads window.wp.wordcount
+	// lazily via require_wordcount() — it captures whatever is on the global at
+	// module-evaluation time. Attached to wp-wordcount with 'after' so it runs
+	// immediately after wordcount.js sets the global, before editor.js loads.
 	wp_add_inline_script(
-		'mainframe-featured-image-url',
-		'(function(){if(!wp.wordcount)return;var _c=wp.wordcount.count;wp.wordcount.count=function(t,y,s){if(typeof t==="string")t=t.replace(/<!--\s*wp:html[^>]*-->[\s\S]*?<!--\s*\/wp:html\s*-->/g,"");return _c(t,y,s);};})();',
-		'before'
+		'wp-wordcount',
+		'(function(){if(!window.wp||!wp.wordcount)return;var _wc=wp.wordcount;wp.wordcount={count:function(t,y,s){if(typeof t==="string")t=t.replace(/<!--\s*wp:html[^>]*-->[\s\S]*?<!--\s*\/wp:html\s*-->/g,"");return _wc.count(t,y,s);}};})();',
+		'after'
 	);
 
 	// Hide WP-domain URLs and navigation from the block editor. The WordPress

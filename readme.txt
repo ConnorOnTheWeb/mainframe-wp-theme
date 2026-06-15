@@ -69,8 +69,9 @@ are subject to the configured redirect behavior.
 
 == Changelog ==
 
-= 1.0.23 =
-* Fixed the block editor's built-in word count and reading time display incorrectly counting content inside Custom HTML blocks (JSON-LD, iframes, raw scripts, etc.). Patches `wp.wordcount.count()` via an inline script to strip `core/html` block content from the raw block markup before counting.
+= 1.0.24 =
+* Fixed the block editor's built-in word count and reading time display incorrectly counting content inside Custom HTML blocks (JSON-LD, iframes, raw scripts, etc.). `wp.wordcount.count` is exposed as a non-configurable getter (no setter), so simple assignment silently fails; the fix replaces the entire `wp.wordcount` object with a wrapper via an inline script attached to `wp-wordcount` with `'after'` position, ensuring it runs before `editor.js` captures the reference.
+* Fixed `reading_time` REST field incorrectly counting content inside Custom HTML blocks (e.g. JSON-LD `<script>` blocks) as readable words. The field now uses `parse_blocks()` on the raw post content and skips `core/html` blocks entirely before counting words.
 
 = 1.0.22 =
 * Fixed `reading_time` REST field incorrectly counting content inside Custom HTML blocks (e.g. JSON-LD `<script>` blocks) as readable words. The field now uses `parse_blocks()` on the raw post content and skips `core/html` blocks entirely before counting words.
