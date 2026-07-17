@@ -436,7 +436,7 @@ add_filter( 'block_editor_settings_all', 'mainframe_editor_canvas_styles' );
  */
 function mainframe_editor_canvas_styles( array $settings ): array {
 	$settings['styles'][] = [
-		'css' => '.wp-block-html { min-height: 2em !important; outline: 2px dashed rgba(0,0,0,.15) !important; outline-offset: 3px; }',
+		'css' => '.wp-block-html { min-height: 4em !important; outline: 2px dashed rgba(0,0,0,.15) !important; outline-offset: 3px; }',
 	];
 	return $settings;
 }
