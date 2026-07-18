@@ -434,14 +434,17 @@ add_filter( 'block_editor_settings_all', 'mainframe_editor_canvas_styles' );
  * The empty-state placeholder (WP 7.0+) is a `components-placeholder`, not
  * the `.wp-block-html` wrapper itself, so it must be targeted directly —
  * the wrapper's own min-height is a no-op once the placeholder's natural
- * content height already exceeds it.
+ * content height already exceeds it. Likewise, once content exists the
+ * editable area is a plain `<textarea>` with its own intrinsic height —
+ * the wrapper's min-height only pads blank space around it, so the
+ * textarea itself must be targeted too.
  *
  * @param array $settings Block editor settings array.
  * @return array Modified settings.
  */
 function mainframe_editor_canvas_styles( array $settings ): array {
 	$settings['styles'][] = [
-		'css' => '.wp-block-html { min-height: 4em !important; outline: 2px dashed rgba(0,0,0,.15) !important; outline-offset: 3px; } .wp-block-html .components-placeholder { min-height: 300px !important; }',
+		'css' => '.wp-block-html { min-height: 4em !important; outline: 2px dashed rgba(0,0,0,.15) !important; outline-offset: 3px; } .wp-block-html .components-placeholder { min-height: 300px !important; } .wp-block-html textarea { min-height: 8em !important; }',
 	];
 	return $settings;
 }
